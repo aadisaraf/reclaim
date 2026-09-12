@@ -22,6 +22,12 @@ setup:
 
 test:
 	uv run pytest
+	LLM_MODE=replay docker compose up -d --build --wait
+	@STATUS=0; \
+	RECLAIM_DOCKER_TESTS=1 uv run pytest -m docker || STATUS=$$?; \
+	(cd web && npx playwright test) || STATUS=$$?; \
+	docker compose down; \
+	exit $$STATUS
 
 demo:
 	docker compose up -d --build --wait

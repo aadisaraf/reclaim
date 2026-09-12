@@ -292,27 +292,27 @@ store, both mocks, SFTP, and the app/web shell. No user story work starts until 
   A6 under `/api/v1`, with a bearer token from `PAYER_TOKEN`, in-memory documents, appeals, and
   idempotency records, the `x-evaluation-order` from the contract, a `DEMO_TODAY` setting, an
   injectable `now()`, and `/_control/reset`.
-- [ ] T040 [P] Write `tests/contract/test_sftp_container.py`, marked `@pytest.mark.docker` and
+- [X] T040 [P] Write `tests/contract/test_sftp_container.py`, marked `@pytest.mark.docker` and
   skipped unless `RECLAIM_DOCKER_TESTS=1`. It targets compose `mock-clearinghouse` on
   localhost:2222 with `.local/sftp/known_hosts`.
   - `SftpClaimArchive.get_837("HSP-CLM-100028")` equals the fixture bytes.
   - `get_837("HSP-CLM-000000")` returns None.
   - `SftpRemitInbox.deliver`, then `list_files`, then `download` round-trips.
   - `clear()` empties the inbox.
-- [ ] T041 Create `src/reclaim/adapters/sftp.py`: `SftpRemitInbox` and `SftpClaimArchive` using
+- [X] T041 Create `src/reclaim/adapters/sftp.py`: `SftpRemitInbox` and `SftpClaimArchive` using
   paramiko 5 (`listdir_attr`, `getfo`, `putfo`, `remove`). Host key checking uses
   `.local/sftp/known_hosts`. Blocking calls run in `asyncio.to_thread`.
 
 ### App and web shell
 
-- [ ] T042 [P] Write `tests/contract/test_app_api_config.py` against `create_app(settings, adapters)`.
+- [X] T042 [P] Write `tests/contract/test_app_api_config.py` against `create_app(settings, adapters)`.
   - `GET /api/health` returns `{"ok": true}`.
   - `GET /api/config` matches the `Config` schema in `contracts/app-api.openapi.yaml`, with
     `demoDate` 2026-09-12 and `aiMode` replay, and its JSON contains no secret values.
   - `GET /api/personas` returns exactly `billing-approver-01`/`authorized-billing-user`/canApprove
     true and `viewer-01`/`viewer`/false.
   - CORS allows `http://localhost:3000`.
-- [ ] T043 Create `src/reclaim/main.py` and `src/reclaim/api.py`.
+- [X] T043 Create `src/reclaim/main.py` and `src/reclaim/api.py`.
   - `main.py`: `create_app(settings, adapters)`, a module-level `app` built from env with real
     adapters, a lifespan that inits the repo, and CORS.
   - `api.py`: an APIRouter with `/api/health`, `/api/config`, and `/api/personas`; the persona
@@ -365,7 +365,7 @@ text; a repeat delivery creates no cases; zero EHR requests are recorded.
   - Delivering the same bytes as `era-copy.835` creates no new cases and writes an audit event
     containing "already processed".
   - An unbalanced copy is recorded as `rejected` with `X-06` and creates no cases.
-- [ ] T049 [P] [US1] Write `tests/contract/test_app_api_queue.py`.
+- [X] T049 [P] [US1] Write `tests/contract/test_app_api_queue.py`.
   - After ingest, `GET /api/queue` returns cases `[case-100028]` with the A9 headline.
   - `summary.lines` equals `["1 paid claim, no action", "1 other denial lane: not handled in this demo"]`.
   - `otherLane[0].label` is "Other denial lane: not handled in this demo".
@@ -389,7 +389,7 @@ text; a repeat delivery creates no cases; zero EHR requests are recorded.
   - Writes one audit event (for example "Read era-2026-09-12.835: 3 claims. Created case-100028
     (CO-50, $4,800). 1 paid claim, no action. 1 other denial lane.").
   - Returns the new medical-necessity case IDs.
-- [ ] T053 [US1] Create `src/reclaim/pipeline.py` and `src/reclaim/poller.py`.
+- [X] T053 [US1] Create `src/reclaim/pipeline.py` and `src/reclaim/poller.py`.
   - `pipeline.py`: `run_case(ctx, case_id)` runs the registered `STEPS` in order under an
     `asyncio.Semaphore(settings.llm_concurrency)`. It sets `running`, saves each step output, and
     stops when a step returns a stop status. A step exception writes that step's audit event with
@@ -397,7 +397,7 @@ text; a repeat delivery creates no cases; zero EHR requests are recorded.
     phase appends to it.
   - `poller.py`: `run_inbox_poller(ctx)` checks every 1 s. It lists files, downloads unseen
     `(name, size, mtime)` entries, calls `ingest`, and schedules `run_case` for each new case.
-- [ ] T054 [US1] Update `src/reclaim/demo.py`, `src/reclaim/api.py`, and `src/reclaim/main.py`.
+- [X] T054 [US1] Update `src/reclaim/demo.py`, `src/reclaim/api.py`, and `src/reclaim/main.py`.
   - `demo.py`: `simulate_remit(ctx)` delivers `fixtures/x12/era-2026-09-12.835` through
     `RemitInbox.deliver`.
   - `api.py`: add `GET /api/queue` and `POST /api/demo/simulate-remit`.
@@ -444,7 +444,7 @@ for that comes in Phase 9).
   - `check_post_read`: encounter start `2026-08-11T09:00:00Z` fails `encounterDate`; subject
     `Patient/patient-0099` fails `encounterSubject`; Coverage `subscriberId` `MEMBER-000000`
     fails `coverageSubscriberId`.
-- [ ] T059 [US2] Write `tests/integration/test_identity_pipeline.py` and add `SpyEhrClient` to
+- [X] T059 [US2] Write `tests/integration/test_identity_pipeline.py` and add `SpyEhrClient` to
   `tests/fakes.py`. `SpyEhrClient` records calls and raises if one is made.
   - The hero case runs to status `claim-matched`, with an audit event listing 6 passed checks and
     `ehr_requests == []`.
@@ -452,7 +452,7 @@ for that comes in Phase 9).
     `needs_review_field` set to that field, spy call count 0, and every audit event has
     `ehr_requests == []`.
   - A missing 837 gives `needs-review` with `originalClaim`.
-- [ ] T060 [P] [US2] Write `tests/contract/test_app_api_case_identity.py`.
+- [X] T060 [P] [US2] Write `tests/contract/test_app_api_case_identity.py`.
   - `GET /api/cases/case-100028` after identity returns `identity.chain`
     `["HSP-CLM-100028", "837 HSP-CLM-100028", "encounter-20260810-42"]`, 6 checks all passed, and
     a `timeline` with ingest, fetch_claim, and resolve_identity events.
@@ -471,7 +471,7 @@ for that comes in Phase 9).
     status is `claim-matched` and the output includes `ClaimMapEntry`. On a fail, status is
     `needs-review` with the field.
   - Writes one audit event naming each check.
-- [ ] T064 [US2] Register `fetch_claim` and `resolve_identity` in `STEPS` in
+- [X] T064 [US2] Register `fetch_claim` and `resolve_identity` in `STEPS` in
   `src/reclaim/pipeline.py`. Add `GET /api/cases/{caseId}` (case, running, statusLine, identity,
   timeline, actions) to `src/reclaim/api.py`.
 - [ ] T065 [US2] Create `web/app/cases/[caseId]/page.tsx`,
@@ -545,7 +545,7 @@ and fetch Binaries for in-window notes only.
   7. Read Binaries for in-window DocumentReferences.
   8. Build the `EvidenceSet`.
   9. Write one audit event with `ehr_requests=client.requests_made` and the included and excluded counts.
-- [ ] T071 [US3] Update three files:
+- [X] T071 [US3] Update three files:
   - `src/reclaim/pipeline.py`: register `gather_evidence` in `STEPS`.
   - `src/reclaim/api.py`: add the `evidence` section (items, `excludedLine`, `searchCounts`) and
     `policy.label` to the case detail.
@@ -660,7 +660,7 @@ satisfied by verified excerpts. Forged and paraphrased citations are rejected.
   - `verify_matrix`; if any citation was rejected, one retry at `high` with 12000 tokens.
   - Status is `needs-evidence` if any row is missing.
   - Writes one audit event with the LLM usage of each call and the rejections.
-- [ ] T084 [US4] Update three files:
+- [X] T084 [US4] Update three files:
   - `src/reclaim/pipeline.py`: register `payer_context` and `build_matrix`.
   - `src/reclaim/main.py`: wire `NorthstarPayerAdapter` and the LLM client by `LLM_MODE`.
   - `src/reclaim/api.py`: add `payerDecision`, `deadline`, `matrix`, `completenessLine`, and
@@ -688,14 +688,14 @@ highlights its requirement and excerpt. An uncited statement blocks the packet.
 
 ### Tests (write first, must fail)
 
-- [ ] T086 [P] [US5] Write `tests/unit/test_letter_verifier.py` for `verify_letter(draft, matrix)`.
+- [X] T086 [P] [US5] Write `tests/unit/test_letter_verifier.py` for `verify_letter(draft, matrix)`.
   - A hero draft with 3 statements citing R1-C1, R2-C1, and R3-C1 passes.
   - Each of these blocks and names the failing statement text:
     - a statement with `citationIds: []`
     - citation `R9-C1`
     - no statement covering R3
     - `requirementIds` that disagree with the cited row
-- [ ] T087 [P] [US5] Write `tests/unit/test_packet_render.py`.
+- [X] T087 [P] [US5] Write `tests/unit/test_packet_render.py`.
   - `build_header(case, claim, claim_map, decision, policy)` yields the hand-written A8 values
     with sources:
     - `HSP-CLM-100028` (remit), `PAYER-CLM-99281` (remit)
@@ -709,7 +709,7 @@ highlights its requirement and excerpt. An uncited statement blocks the packet.
     "reconsider and reprocess payment", and "v1".
   - The status lines are "Ready for review", "Evidence completeness: 3/3 policy criteria
     satisfied", and "Expected recovery: $4,800".
-- [ ] T088 [P] [US5] Write `tests/integration/test_packet_pipeline.py` with `FakeLlmClient`.
+- [X] T088 [P] [US5] Write `tests/integration/test_packet_pipeline.py` with `FakeLlmClient`.
   - The hero case ends `ready-for-review` with packet v1 `ready-for-review` and exactly 2 LLM
     calls (`build_matrix` medium, `draft_packet` low).
   - The `draft_packet` input contains only verified matrix rows.
@@ -717,7 +717,7 @@ highlights its requirement and excerpt. An uncited statement blocks the packet.
   - Re-running with an identical draft keeps v1; a changed draft creates v2.
   - A draft with an uncited statement gives packet `blocked` with `blocked_reason` naming it, and
     the case stays `evidence-gathered`.
-- [ ] T089 [P] [US5] Write `tests/contract/test_app_api_packet.py`.
+- [X] T089 [P] [US5] Write `tests/contract/test_app_api_packet.py`.
   - `GET /api/cases/case-100028` returns `packet.version` 1, `statusLine` "Ready for review",
     `completenessLine`, `deadline.line` "Appeal deadline: October 19, 2026 (37 days left)",
     `recoveryLine` "Expected recovery: $4,800", header fields with `source`, and statements with
@@ -727,18 +727,18 @@ highlights its requirement and excerpt. An uncited statement blocks the packet.
 
 ### Implementation
 
-- [ ] T090 [US5] Add `verify_letter(draft, matrix) -> LetterCheck` to `src/reclaim/verify.py`,
+- [X] T090 [US5] Add `verify_letter(draft, matrix) -> LetterCheck` to `src/reclaim/verify.py`,
   following the "Letter body" rule in data-model.md §3.
-- [ ] T091 [US5] Create `src/reclaim/prompts/draft_packet.py`: `INSTRUCTIONS` (phrase statements
+- [X] T091 [US5] Create `src/reclaim/prompts/draft_packet.py`: `INSTRUCTIONS` (phrase statements
   only from the given verified rows, cite each), the strict `LetterDraft` model, and
   `build_input(matrix, requirement_texts)`.
-- [ ] T092 [US5] Create `src/reclaim/pdf.py`:
+- [X] T092 [US5] Create `src/reclaim/pdf.py`:
   - `render_pdf(letter) -> bytes`: reportlab, `invariant=1`, `pageCompression=0`, Helvetica,
     header table, body statements with citation markers, requested action "Please reconsider and
     reprocess payment", attachment list, required approver, version, and a
     "SYNTHETIC DEMO DATA" footer on every page.
   - `render_html(letter) -> str`.
-- [ ] T093 [US5] Create `src/reclaim/steps/draft_packet.py` with `build_header` and
+- [X] T093 [US5] Create `src/reclaim/steps/draft_packet.py` with `build_header` and
   `attachment_ids`, plus `draft_packet(ctx, case)`.
   - LLM call at `low` with `max_output_tokens` 3000.
   - `verify_letter`, then assemble the `Letter`.
@@ -747,7 +747,7 @@ highlights its requirement and excerpt. An uncited statement blocks the packet.
   - Version by `content_sha256`.
   - Set the packet and case status.
   - Write one audit event with usage.
-- [ ] T094 [US5] Update two files:
+- [X] T094 [US5] Update two files:
   - `src/reclaim/pipeline.py`: register `draft_packet`.
   - `src/reclaim/api.py`: add the `packet` and `recoveryLine` sections, plus
     `GET /api/cases/{caseId}/packets/{version}/pdf` and
@@ -774,7 +774,7 @@ A repeat submission gives one appeal. `viewer-01` is refused.
 
 ### Tests (write first, must fail)
 
-- [ ] T096 [P] [US6] Write `tests/integration/test_submit.py`, using the mock payer over
+- [X] T096 [P] [US6] Write `tests/integration/test_submit.py`, using the mock payer over
   ASGITransport and a ready hero packet.
   - Approving as `billing-approver-01`:
     - Uploads `appeal-letter-100028`, `note-progress-031`, `treatment-note-022`, `order-901`, and
@@ -788,14 +788,14 @@ A repeat submission gives one appeal. `viewer-01` is refused.
   - Version 2 when only v1 exists gets 409.
   - With payer `DEMO_TODAY=2026-10-20`: 422 `payer_refused` naming `appeal_window_closed`, case
     stays `approved`, and no API string contains "Submitted".
-- [ ] T097 [P] [US6] Write `tests/integration/test_track.py`.
+- [X] T097 [P] [US6] Write `tests/integration/test_track.py`.
   - A `submitted` case with the payer clock under 30 s stays `submitted` with no new audit event.
   - At +30 s, `track` sets `in-review` and writes exactly one audit event.
   - Polling again writes no further event.
 
 ### Implementation
 
-- [ ] T098 [US6] Create `src/reclaim/steps/approve_and_submit.py`: `approve_and_submit(ctx,
+- [X] T098 [US6] Create `src/reclaim/steps/approve_and_submit.py`: `approve_and_submit(ctx,
   case_id, version, persona)`.
   - Checks role, latest version, packet and case `ready-for-review`, and all rows satisfied.
   - Records the approval and sets `approved`.
@@ -803,10 +803,10 @@ A repeat submission gives one appeal. `viewer-01` is refused.
   - On success, submission `confirmed` and case `submitted`. On `PayerError`, submission `refused`
     with the code and message, and the case stays `approved`.
   - Writes one audit event per outcome.
-- [ ] T099 [US6] Create `src/reclaim/steps/track.py` (`track(ctx, case)` calls `get_appeal`, sets
+- [X] T099 [US6] Create `src/reclaim/steps/track.py` (`track(ctx, case)` calls `get_appeal`, sets
   `in-review` on change, writes an audit event only on change). Add a 5 s tracking loop to
   `src/reclaim/poller.py` that tracks every `submitted` case.
-- [ ] T100 [US6] Add `POST /api/cases/{caseId}/packets/{version}/approve-and-submit` (reads
+- [X] T100 [US6] Add `POST /api/cases/{caseId}/packets/{version}/approve-and-submit` (reads
   `X-Persona`) to `src/reclaim/api.py`, plus the `submission` section and `actions.canApprove`
   (false unless the persona role is authorized and the packet is ready).
 - [ ] T101 [US6] Update `web/app/cases/[caseId]/PacketTab.tsx` and
@@ -816,7 +816,7 @@ A repeat submission gives one appeal. `viewer-01` is refused.
   - Shows `submission.display`, then "In review".
   - Keeps polling every 1 s while the status is `submitted`.
   - Never renders "Submitted" without `submission.appealId`.
-- [ ] T102 [US6] Create `scripts/record_replay.py`. It builds the app context in-process (mock
+- [X] T102 [US6] Create `scripts/record_replay.py`. It builds the app context in-process (mock
   hospital and payer via ASGITransport, `FakeInbox`-style in-memory inbox, temp SQLite) with
   `OpenAiLlmClient(record_dir=tmp)`.
   - Runs the hero case to ready-for-review, then the missing-evidence case (hospital
@@ -1004,18 +1004,18 @@ run again with a fresh confirmation.
   5. `docker compose down`, always, even on failure
 
   Confirm the `docker` marker is registered in `pyproject.toml`.
-- [ ] T125 [P] Write `docs/explain/ingest.md`, `docs/explain/fetch_claim.md`, and
+- [X] T125 [P] Write `docs/explain/ingest.md`, `docs/explain/fetch_claim.md`, and
   `docs/explain/resolve_identity.md`. Each is one paragraph: what it reads, what it decides, and
   what production replaces (a real clearinghouse SFTP or API, the hospital's claim archive, the
   enterprise MPI or claim map).
-- [ ] T126 [P] Write `docs/explain/gather_evidence.md`, `docs/explain/payer_context.md`, and
+- [X] T126 [P] Write `docs/explain/gather_evidence.md`, `docs/explain/payer_context.md`, and
   `docs/explain/build_matrix.md`, one paragraph each with the same three points. Production
   replacements are SMART Backend Services at the hospital FHIR endpoint, payer-specific
   PayerAdapters, and BAA/zero-data-retention LLM terms.
-- [ ] T127 [P] Write `docs/explain/draft_packet.md`, `docs/explain/approve_and_submit.md`, and
+- [X] T127 [P] Write `docs/explain/draft_packet.md`, `docs/explain/approve_and_submit.md`, and
   `docs/explain/track.md`, one paragraph each with the same three points. Production replacements
   are real SSO roles, payer portal or clearinghouse submission, and the Batch API for backlogs.
-- [ ] T128 [P] Write `README.md`: what Reclaim is (one paragraph, "SYNTHETIC DEMO DATA"), a
+- [X] T128 [P] Write `README.md`: what Reclaim is (one paragraph, "SYNTHETIC DEMO DATA"), a
   quickstart (`make setup`, `make test`, `make demo`, the 6 clicks, `make reset`) linking
   `specs/001-denial-recovery/quickstart.md`, the architecture in 5 bullets, and "never put keys
   anywhere but `.env`".

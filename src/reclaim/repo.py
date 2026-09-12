@@ -136,6 +136,10 @@ class Repo:
         self.conn.commit()
         return True
 
+    def list_remit_files(self) -> list[dict]:
+        rows = self.conn.execute("SELECT * FROM remit_files ORDER BY received_at").fetchall()
+        return [dict(r) for r in rows]
+
     def upsert_case(self, case_id: str, **fields) -> None:
         existing = self.conn.execute(
             "SELECT case_id FROM cases WHERE case_id = ?", (case_id,)

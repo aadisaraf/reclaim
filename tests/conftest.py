@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import httpx
@@ -9,6 +10,15 @@ from reclaim.config import Settings
 from reclaim.repo import Repo
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def pytest_collection_modifyitems(config, items):
+    if os.environ.get("RECLAIM_DOCKER_TESTS") == "1":
+        return
+    skip_docker = pytest.mark.skip(reason="needs the docker-compose SFTP container (RECLAIM_DOCKER_TESTS=1)")
+    for item in items:
+        if "docker" in item.keywords:
+            item.add_marker(skip_docker)
 
 
 @pytest.fixture

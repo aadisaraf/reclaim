@@ -2,7 +2,9 @@ from collections.abc import Iterator
 
 from pydantic import BaseModel
 
-from reclaim.models import Citation, EvidenceItem, EvidenceMatrix, EvidenceSet, MatrixProposal, MatrixRow, Policy
+from reclaim.models import (
+    Citation, EvidenceItem, EvidenceMatrix, EvidenceSet, LetterDraft, MatrixProposal, MatrixRow, Policy,
+)
 
 MIN_EXCERPT_LEN = 12
 
@@ -103,3 +105,67 @@ def verify_matrix(proposal: MatrixProposal, evidence_set: EvidenceSet, policy: P
         summary={"satisfied": satisfied_count, "total": len(policy.requirements)}, requirements=rows,
     )
     return matrix, rejections
+
+
+class LetterCheck(BaseModel):
+    blocked: bool
+    blocked_reason: str | None = None
+
+
+def verify_letter(draft: LetterDraft, matrix: EvidenceMatrix) -> LetterCheck:
+    """data-model.md §3 "Letter body" rule.
+
+    Every statement needs at least 1 citation_id, and every id must exist in the verified
+    matrix. A statement's requirement_ids must equal the requirements owned by its cited rows.
+    Every requirement satisfied in the matrix must be covered by at least one statement. Any
+    failure blocks the packet, naming the offending statement's text (or, when no statement
+    covers a requirement, naming that requirement).
+    """
+    citation_requirement: dict[str, str] = {
+        citation.citation_id: row.requirement_id
+        for row in matrix.requirements
+        for citation in row.evidence
+    }
+
+    covered: set[str] = set()
+    for statement in draft.statements:
+        if not statement.citationIds:
+            return LetterCheck(
+                blocked=True,
+                blocked_reason=f'Statement has no citations: "{statement.text}"',
+            )
+
+        statement_requirements: set[str] = set()
+        for citation_id in statement.citationIds:
+            requirement_id = citation_requirement.get(citation_id)
+            if requirement_id is None:
+                return LetterCheck(
+                    blocked=True,
+                    blocked_reason=(
+                        f'Statement cites {citation_id}, which is not in the verified matrix: '
+                        f'"{statement.text}"'
+                    ),
+                )
+            statement_requirements.add(requirement_id)
+
+        if statement_requirements != set(statement.requirementIds):
+            return LetterCheck(
+                blocked=True,
+                blocked_reason=(
+                    f'Statement requirementIds {statement.requirementIds} do not match the '
+                    f'requirements owned by its citations {sorted(statement_requirements)}: '
+                    f'"{statement.text}"'
+                ),
+            )
+
+        covered |= statement_requirements
+
+    required = {row.requirement_id for row in matrix.requirements if row.status == "satisfied"}
+    missing = sorted(required - covered)
+    if missing:
+        return LetterCheck(
+            blocked=True,
+            blocked_reason=f"No statement covers requirement(s): {', '.join(missing)}",
+        )
+
+    return LetterCheck(blocked=False)

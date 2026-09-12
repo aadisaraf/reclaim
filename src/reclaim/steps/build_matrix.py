@@ -49,7 +49,6 @@ async def build_matrix(ctx, case: dict) -> BuildMatrixResult:
     if any(row.status == "missing" for row in matrix.requirements):
         repo.update_case(case_id, status="needs-evidence")
 
-    repo.save_step_output(case_id, "build_matrix", matrix.model_dump_json())
     write_event(
         repo, settings, case_id, "build_matrix",
         f"Evidence matrix: {matrix.summary['satisfied']}/{matrix.summary['total']} satisfied",
