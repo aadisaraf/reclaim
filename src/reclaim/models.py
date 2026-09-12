@@ -94,6 +94,7 @@ class EvidenceItem(BaseModel):
     summary: str = ""
     document: str | None = None
     text: str | None = None
+    raw: dict = {}
 
 
 class EvidenceSet(BaseModel):

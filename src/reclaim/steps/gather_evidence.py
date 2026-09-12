@@ -64,6 +64,7 @@ class GatherEvidenceResult(BaseModel):
     evidence_set: EvidenceSet | None = None
     policy_id: str | None = None
     policy_version: str | None = None
+    appeal_window_days: int | None = None
 
 
 async def gather_evidence(ctx, case: dict) -> GatherEvidenceResult:
@@ -136,7 +137,7 @@ async def gather_evidence(ctx, case: dict) -> GatherEvidenceResult:
     items: list[EvidenceItem] = [
         EvidenceItem(
             resource=f"Coverage/{coverage['id']}", resource_type="Coverage", date=None,
-            source_url=f"Coverage/{coverage['id']}", included=True, summary=plan_type,
+            source_url=f"Coverage/{coverage['id']}", included=True, summary=plan_type, raw=coverage,
         )
     ]
     excluded_count = 0
@@ -163,7 +164,7 @@ async def gather_evidence(ctx, case: dict) -> GatherEvidenceResult:
             items.append(EvidenceItem(
                 resource=f"{resource_type}/{resource['id']}", resource_type=resource_type,
                 date=rdate, source_url=f"{resource_type}/{resource['id']}",
-                included=included, exclusion_reason=exclusion_reason,
+                included=included, exclusion_reason=exclusion_reason, raw=resource,
             ))
             if resource_type == "DocumentReference" and included:
                 in_window_doc_refs.append(resource)
@@ -188,4 +189,7 @@ async def gather_evidence(ctx, case: dict) -> GatherEvidenceResult:
         f"Gathered evidence: {included_count} included, {excluded_count} excluded, policy {policy.policyId}",
         ehr_requests=client.requests_made,
     )
-    return GatherEvidenceResult(evidence_set=evidence_set, policy_id=policy.policyId, policy_version=policy.version)
+    return GatherEvidenceResult(
+        evidence_set=evidence_set, policy_id=policy.policyId, policy_version=policy.version,
+        appeal_window_days=policy.appealWindowDays,
+    )
