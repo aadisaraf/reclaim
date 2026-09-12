@@ -15,7 +15,7 @@ def _env(name: str, default: str) -> str:
 class Settings:
     llm_mode: Literal["live", "replay"] = "replay"
     openai_model: str = "gpt-5.6-luna"
-    openai_api_key: str = ""
+    openai_api_key: str = field(default="", repr=False)
     effort_build_matrix: Literal["low", "medium", "high"] = "medium"
     effort_draft_packet: Literal["low", "medium", "high"] = "low"
     llm_concurrency: int = 4
@@ -32,11 +32,11 @@ class Settings:
     sftp_host: str = "mock-clearinghouse"
     sftp_port: int = 22
     sftp_user: str = "reclaim"
-    sftp_password: str = ""
+    sftp_password: str = field(default="", repr=False)
 
     hospital_client_id: str = "reclaim"
-    hospital_client_secret: str = ""
-    payer_token: str = ""
+    hospital_client_secret: str = field(default="", repr=False)
+    payer_token: str = field(default="", repr=False)
 
     database_path: str = ".local/reclaim.db"
     next_public_api_base: str = "http://localhost:8000"
