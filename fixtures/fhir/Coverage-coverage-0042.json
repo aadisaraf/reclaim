@@ -1,0 +1,49 @@
+{
+  "resourceType": "Coverage",
+  "id": "coverage-0042",
+  "status": "active",
+  "beneficiary": {
+    "reference": "Patient/patient-0042"
+  },
+  "subscriberId": "MEMBER-448820",
+  "payor": [
+    {
+      "identifier": {
+        "system": "http://mock-northstar-health.example/payer-id",
+        "value": "NSTHLTH01"
+      },
+      "display": "Northstar Health"
+    }
+  ],
+  "class": [
+    {
+      "type": {
+        "coding": [
+          {
+            "system": "http://terminology.hl7.org/CodeSystem/coverage-class",
+            "code": "plan",
+            "display": "Plan"
+          }
+        ]
+      },
+      "value": "commercial-ppo",
+      "name": "Commercial PPO"
+    },
+    {
+      "type": {
+        "coding": [
+          {
+            "system": "http://terminology.hl7.org/CodeSystem/coverage-class",
+            "code": "group",
+            "display": "Group"
+          }
+        ]
+      },
+      "value": "NST-PPO-GRP-01",
+      "name": "NST-PPO-GRP-01"
+    }
+  ],
+  "period": {
+    "start": "2026-01-01"
+  }
+}

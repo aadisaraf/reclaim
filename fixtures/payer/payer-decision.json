@@ -1,0 +1,14 @@
+{
+  "payerClaimId": "PAYER-CLM-99281",
+  "claimId": "HSP-CLM-100028",
+  "decision": "denied",
+  "decisionDate": "2026-08-20",
+  "reasonCode": "CO-50",
+  "reasonText": "Insufficient documentation of medical necessity",
+  "appealDeadline": "2026-10-19",
+  "allowedSubmissionChannels": ["portal", "fax"],
+  "letter": {
+    "documentId": "denial-letter-99281",
+    "url": "/api/v1/documents/denial-letter-99281"
+  }
+}

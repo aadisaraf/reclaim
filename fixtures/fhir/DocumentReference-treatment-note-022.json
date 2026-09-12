@@ -1,0 +1,20 @@
+{
+  "resourceType": "DocumentReference",
+  "id": "treatment-note-022",
+  "status": "current",
+  "type": {
+    "text": "Physical therapy discharge summary"
+  },
+  "subject": {
+    "reference": "Patient/patient-0042"
+  },
+  "date": "2026-07-14T00:00:00Z",
+  "content": [
+    {
+      "attachment": {
+        "contentType": "text/plain",
+        "url": "Binary/treatment-note-022"
+      }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "resourceType": "DiagnosticReport",
+  "id": "report-xr-555",
+  "status": "final",
+  "code": {
+    "text": "Lumbar spine X-ray"
+  },
+  "subject": {
+    "reference": "Patient/patient-0042"
+  },
+  "effectiveDateTime": "2026-05-28",
+  "conclusion": "Degenerative changes of the lumbar spine. No acute fracture."
+}

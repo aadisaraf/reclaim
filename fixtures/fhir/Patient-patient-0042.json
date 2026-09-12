@@ -1,0 +1,26 @@
+{
+  "resourceType": "Patient",
+  "id": "patient-0042",
+  "identifier": [
+    {
+      "type": {
+        "coding": [
+          {
+            "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+            "code": "MR",
+            "display": "Medical record number"
+          }
+        ]
+      },
+      "system": "http://mock-hospital.example/mrn",
+      "value": "MRN-0042"
+    }
+  ],
+  "name": [
+    {
+      "family": "Rivera",
+      "given": ["Jordan"]
+    }
+  ],
+  "birthDate": "1980-02-14"
+}

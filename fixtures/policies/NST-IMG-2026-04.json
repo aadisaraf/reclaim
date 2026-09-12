@@ -1,0 +1,33 @@
+{
+  "policyId": "NST-IMG-2026-04",
+  "version": "2026.04",
+  "title": "Advanced imaging of the lumbar spine (SYNTHETIC)",
+  "payer": "Northstar Health",
+  "payerId": "NSTHLTH01",
+  "planType": "Commercial PPO",
+  "states": ["WA"],
+  "procedureCodes": ["72148"],
+  "effectiveStart": "2026-01-01",
+  "effectiveEnd": null,
+  "appealWindowDays": 60,
+  "lookbackMonths": 6,
+  "requirements": [
+    {
+      "id": "R1",
+      "text": "Documented diagnosis that supports lumbar imaging, such as lumbar radiculopathy",
+      "evidenceTypes": ["Condition", "DocumentReference"]
+    },
+    {
+      "id": "R2",
+      "text": "Documented trial of conservative treatment lasting at least 6 weeks within the 6 months before the date of service",
+      "evidenceTypes": ["DocumentReference", "MedicationRequest"]
+    },
+    {
+      "id": "R3",
+      "text": "Clinical rationale for the imaging order from the treating clinician",
+      "evidenceTypes": ["ServiceRequest", "DocumentReference"]
+    }
+  ],
+  "sourceUrl": "https://example.org/mock-policy/NST-IMG-2026-04",
+  "sourceRetrievedAt": "2026-09-12"
+}

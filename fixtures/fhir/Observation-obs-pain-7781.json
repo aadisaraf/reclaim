@@ -1,0 +1,24 @@
+{
+  "resourceType": "Observation",
+  "id": "obs-pain-7781",
+  "status": "final",
+  "code": {
+    "coding": [
+      {
+        "system": "http://loinc.org",
+        "code": "72514-3",
+        "display": "Pain severity - 0-10 verbal numeric rating [Score] - Reported"
+      }
+    ]
+  },
+  "subject": {
+    "reference": "Patient/patient-0042"
+  },
+  "effectiveDateTime": "2026-08-10",
+  "valueQuantity": {
+    "value": 8,
+    "unit": "score",
+    "system": "http://unitsofmeasure.org",
+    "code": "{score}"
+  }
+}

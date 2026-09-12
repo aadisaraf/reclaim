@@ -1,0 +1,17 @@
+{
+  "resourceType": "Organization",
+  "id": "mock-hospital",
+  "identifier": [
+    {
+      "system": "http://hl7.org/fhir/sid/us-npi",
+      "value": "1245319599"
+    }
+  ],
+  "name": "Mock Hospital",
+  "address": [
+    {
+      "city": "Seattle",
+      "state": "WA"
+    }
+  ]
+}

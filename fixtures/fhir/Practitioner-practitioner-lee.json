@@ -1,0 +1,16 @@
+{
+  "resourceType": "Practitioner",
+  "id": "practitioner-lee",
+  "identifier": [
+    {
+      "system": "http://hl7.org/fhir/sid/us-npi",
+      "value": "1234567893"
+    }
+  ],
+  "name": [
+    {
+      "family": "Lee",
+      "given": ["Sam"]
+    }
+  ]
+}

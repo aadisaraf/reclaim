@@ -1,0 +1,20 @@
+{
+  "resourceType": "DocumentReference",
+  "id": "note-ortho-2019-004",
+  "status": "current",
+  "type": {
+    "text": "Orthopedic clinic visit note"
+  },
+  "subject": {
+    "reference": "Patient/patient-0042"
+  },
+  "date": "2019-03-02T00:00:00Z",
+  "content": [
+    {
+      "attachment": {
+        "contentType": "text/plain",
+        "url": "Binary/note-ortho-2019-004"
+      }
+    }
+  ]
+}

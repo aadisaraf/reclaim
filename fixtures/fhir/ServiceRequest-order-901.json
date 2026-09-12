@@ -1,0 +1,29 @@
+{
+  "resourceType": "ServiceRequest",
+  "id": "order-901",
+  "status": "completed",
+  "intent": "order",
+  "code": {
+    "coding": [
+      {
+        "system": "http://www.ama-assn.org/go/cpt",
+        "code": "72148",
+        "display": "MRI lumbar spine without contrast"
+      }
+    ]
+  },
+  "subject": {
+    "reference": "Patient/patient-0042"
+  },
+  "authoredOn": "2026-08-10",
+  "reasonReference": [
+    {
+      "reference": "Condition/condition-100"
+    }
+  ],
+  "note": [
+    {
+      "text": "Ordering lumbar MRI without contrast given radiating left leg pain, a positive straight-leg raise, and focal lower extremity weakness concerning for lumbar radiculopathy; imaging is needed now to evaluate for nerve root compression and guide further management."
+    }
+  ]
+}

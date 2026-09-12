@@ -1,0 +1,279 @@
+openapi: 3.1.0
+info:
+  title: Northstar Health mock payer API (SYNTHETIC DEMO DATA)
+  version: "1.0.0"
+  description: |
+    Clearly labelled MOCK. No universal payer API exists; production uses one PayerAdapter per
+    payer (API, clearinghouse, or authorized portal connection). This contract is Appendix A6 of
+    docs/reclaim-speckit-prompts.md, exactly. Operations or responses NOT in A6 are tagged
+    `x-not-in-appendix-a6: true` (see research.md §14).
+    Local base URL is http://mock-northstar-health.example/api/v1 (A6 names https; research.md §11).
+    Appeal-window checks are judged against DEMO_TODAY (default 2026-09-12).
+servers:
+  - url: http://mock-northstar-health.example/api/v1
+security:
+  - bearer: []
+paths:
+  /claims/{payerClaimId}/decision:
+    get:
+      operationId: getDecision
+      parameters:
+        - {name: payerClaimId, in: path, required: true, schema: {type: string}, example: PAYER-CLM-99281}
+      responses:
+        "200":
+          description: Payer decision
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Decision"}
+              example:
+                payerClaimId: PAYER-CLM-99281
+                claimId: HSP-CLM-100028
+                decision: denied
+                decisionDate: "2026-08-20"
+                reasonCode: CO-50
+                reasonText: Insufficient documentation of medical necessity
+                appealDeadline: "2026-10-19"
+                allowedSubmissionChannels: [portal, fax]
+                letter:
+                  documentId: denial-letter-99281
+                  url: /api/v1/documents/denial-letter-99281
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "404":
+          description: claim_not_found
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Error"}
+              example: {error: {code: claim_not_found, message: "No claim PAYER-CLM-00000"}}
+  /documents/{documentId}:
+    get:
+      operationId: getDocument
+      parameters:
+        - {name: documentId, in: path, required: true, schema: {type: string}, example: denial-letter-99281}
+      responses:
+        "200":
+          description: The synthetic denial letter (states the October 19, 2026 deadline)
+          content:
+            application/pdf:
+              schema: {type: string, format: binary}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "404":
+          description: document_not_found
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Error"}
+              example: {error: {code: document_not_found, message: "No document unknown-doc"}}
+  /documents:
+    post:
+      operationId: uploadDocument
+      description: Addition in A6. Stores bytes by documentId.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [documentId, documentType, relatedPayerClaimId, file]
+              properties:
+                documentId: {type: string, example: note-progress-031}
+                documentType: {type: string, enum: [appeal-letter, clinical-note, order, policy-snapshot]}
+                relatedPayerClaimId: {type: string, example: PAYER-CLM-99281}
+                file: {type: string, format: binary}
+      responses:
+        "201":
+          description: Stored
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/DocumentRef"}
+              example: {documentId: note-progress-031}
+        "200":
+          description: Same documentId re-uploaded with the same bytes
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/DocumentRef"}
+        "400":
+          x-not-in-appendix-a6: true
+          description: invalid_request (missing field or unknown documentType)
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Error"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "409":
+          description: document_conflict (same documentId, different bytes)
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Error"}
+              example: {error: {code: document_conflict, message: "Document note-progress-031 already exists with different content"}}
+  /appeals:
+    post:
+      operationId: createAppeal
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: {type: string}
+          example: appeal-case-100028-v1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/AppealRequest"}
+            example:
+              payerClaimId: PAYER-CLM-99281
+              hospitalClaimId: HSP-CLM-100028
+              appealType: reconsideration
+              reasonCode: CO-50
+              letterDocumentId: appeal-letter-100028
+              attachments: [note-progress-031, treatment-note-022, order-901, policy-snapshot-NST-IMG-2026-04]
+              submittedBy: {userId: billing-approver-01, role: authorized-billing-user}
+      responses:
+        "201":
+          description: Appeal received
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/AppealReceipt"}
+              example: {appealId: NST-APL-80126, status: received, receivedAt: "2026-09-12T18:32:00Z", expectedResolutionDays: 14}
+        "200":
+          description: Idempotent replay (same key, same body); identical body to the original 201
+          headers:
+            Idempotent-Replayed:
+              schema: {type: string, const: "true"}
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/AppealReceipt"}
+        "400":
+          x-not-in-appendix-a6: true
+          description: invalid_request (missing Idempotency-Key or body fails schema)
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Error"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "404":
+          description: claim_not_found
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Error"}
+        "409":
+          description: idempotency_key_reused (same key, different body)
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Error"}
+              example: {error: {code: idempotency_key_reused, message: "Idempotency-Key appeal-case-100028-v1 was used with a different request body"}}
+        "422":
+          description: unknown_attachment (letter or attachment not uploaded) or appeal_window_closed (DEMO_TODAY after appealDeadline)
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Error"}
+              examples:
+                unknown_attachment: {value: {error: {code: unknown_attachment, message: "Document treatment-note-022 has not been uploaded"}}}
+                appeal_window_closed: {value: {error: {code: appeal_window_closed, message: "Appeal deadline 2026-10-19 has passed"}}}
+      x-evaluation-order: >
+        401 auth; 400 schema/header; stored key with same body → 200 replay; stored key with
+        different body → 409; 404 claim; 422 appeal_window_closed; 422 unknown_attachment; 201.
+  /appeals/{appealId}:
+    get:
+      operationId: getAppeal
+      description: Addition in A6. Moves from received to in-review 30 seconds after submission.
+      parameters:
+        - {name: appealId, in: path, required: true, schema: {type: string}, example: NST-APL-80126}
+      responses:
+        "200":
+          description: Appeal status
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/AppealStatus"}
+              examples:
+                received: {value: {appealId: NST-APL-80126, status: received, updatedAt: "2026-09-12T18:32:00Z"}}
+                in-review: {value: {appealId: NST-APL-80126, status: in-review, updatedAt: "2026-09-12T18:32:30Z"}}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "404":
+          x-not-in-appendix-a6: true
+          description: appeal_not_found
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Error"}
+  /_control/reset:
+    post:
+      x-not-in-appendix-a6: true
+      operationId: resetMock
+      description: Demo only. Clears uploaded documents, appeals, and idempotency records.
+      responses:
+        "204": {description: Reset}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      description: Mock payer token from PAYER_TOKEN in .env
+  responses:
+    Unauthorized:
+      description: unauthorized
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/Error"}
+          example: {error: {code: unauthorized, message: "Missing or invalid bearer token"}}
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: {type: string, description: snake_case}
+            message: {type: string}
+    Decision:
+      type: object
+      required: [payerClaimId, claimId, decision, decisionDate, reasonCode, reasonText, appealDeadline, allowedSubmissionChannels, letter]
+      properties:
+        payerClaimId: {type: string}
+        claimId: {type: string}
+        decision: {type: string, example: denied}
+        decisionDate: {type: string, format: date}
+        reasonCode: {type: string}
+        reasonText: {type: string}
+        appealDeadline: {type: string, format: date}
+        allowedSubmissionChannels: {type: array, items: {type: string}}
+        letter:
+          type: object
+          required: [documentId, url]
+          properties:
+            documentId: {type: string}
+            url: {type: string}
+    DocumentRef:
+      type: object
+      required: [documentId]
+      properties:
+        documentId: {type: string}
+    AppealRequest:
+      type: object
+      required: [payerClaimId, hospitalClaimId, appealType, reasonCode, letterDocumentId, attachments, submittedBy]
+      properties:
+        payerClaimId: {type: string}
+        hospitalClaimId: {type: string}
+        appealType: {type: string, enum: [reconsideration]}
+        reasonCode: {type: string}
+        letterDocumentId: {type: string}
+        attachments: {type: array, items: {type: string}}
+        submittedBy:
+          type: object
+          required: [userId, role]
+          properties:
+            userId: {type: string}
+            role: {type: string}
+    AppealReceipt:
+      type: object
+      required: [appealId, status, receivedAt, expectedResolutionDays]
+      properties:
+        appealId: {type: string}
+        status: {type: string, enum: [received, in-review]}
+        receivedAt: {type: string, format: date-time}
+        expectedResolutionDays: {type: integer}
+    AppealStatus:
+      type: object
+      required: [appealId, status, updatedAt]
+      properties:
+        appealId: {type: string}
+        status: {type: string, enum: [received, in-review]}
+        updatedAt: {type: string, format: date-time}

@@ -1,0 +1,293 @@
+openapi: 3.1.0
+info:
+  title: Reclaim app API (used by the web UI)
+  version: "1.0.0"
+  description: |
+    Local demo API at http://localhost:8000. No login: the persona picker sends X-Persona on
+    human actions and the server checks the role. Errors use {"error": {"code", "message"}}.
+    SYNTHETIC DEMO DATA only; there is no upload endpoint.
+servers:
+  - url: http://localhost:8000
+paths:
+  /api/health:
+    get:
+      operationId: health
+      responses:
+        "200": {description: OK, content: {application/json: {schema: {type: object, properties: {ok: {type: boolean}}}}}}
+  /api/config:
+    get:
+      operationId: getConfig
+      description: Header data for every screen, plus the configured base URLs. Never returns secrets.
+      responses:
+        "200":
+          description: Config
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Config"}
+              example:
+                synthetic: true
+                demoDate: "2026-09-12"
+                aiMode: replay
+                model: gpt-5.6-luna
+                missingEvidence: false
+                baseUrls:
+                  clearinghouse: sftp://mock-clearinghouse:22
+                  ehr: http://mock-hospital.example/fhir/R4
+                  payer: http://mock-northstar-health.example/api/v1
+  /api/personas:
+    get:
+      operationId: listPersonas
+      responses:
+        "200":
+          description: Personas
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: "#/components/schemas/Persona"}}
+              example:
+                - {userId: billing-approver-01, role: authorized-billing-user, canApprove: true}
+                - {userId: viewer-01, role: viewer, canApprove: false}
+  /api/queue:
+    get:
+      operationId: getQueue
+      responses:
+        "200":
+          description: Worked cases plus summary lines for claims we do not work
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Queue"}
+              example:
+                cases:
+                  - caseId: case-100028
+                    headline: "Northstar Health · CO-50 Medical necessity · $4,800"
+                    status: ready-for-review
+                    running: false
+                summary:
+                  paidClaims: 1
+                  otherDenials: 1
+                  lines: ["1 paid claim, no action", "1 other denial lane: not handled in this demo"]
+                otherLane:
+                  - {caseId: case-100035, hospitalClaimId: HSP-CLM-100035, denialCode: CO-16, amount: 620, label: "Other denial lane: not handled in this demo"}
+                remitFiles:
+                  - {fileName: era-2026-09-12.835, status: processed, claimCount: 3}
+  /api/cases/{caseId}:
+    get:
+      operationId: getCase
+      parameters: [{$ref: "#/components/parameters/CaseId"}]
+      responses:
+        "200":
+          description: Everything the case page shows
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/CaseDetail"}
+        "404": {$ref: "#/components/responses/NotFound"}
+  /api/cases/{caseId}/packets/{version}/pdf:
+    get:
+      operationId: getPacketPdf
+      parameters: [{$ref: "#/components/parameters/CaseId"}, {$ref: "#/components/parameters/Version"}]
+      responses:
+        "200": {description: Packet PDF with SYNTHETIC DEMO DATA footer, content: {application/pdf: {schema: {type: string, format: binary}}}}
+        "404": {$ref: "#/components/responses/NotFound"}
+  /api/cases/{caseId}/documents/{documentId}:
+    get:
+      operationId: getCaseDocument
+      description: Stored bytes of a case document (denial letter, attachments, policy snapshot).
+      parameters:
+        - {$ref: "#/components/parameters/CaseId"}
+        - {name: documentId, in: path, required: true, schema: {type: string}, example: denial-letter-99281}
+      responses:
+        "200": {description: Document bytes with their content type, content: {application/octet-stream: {schema: {type: string, format: binary}}}}
+        "404": {$ref: "#/components/responses/NotFound"}
+  /api/cases/{caseId}/rerun:
+    post:
+      operationId: rerunCase
+      parameters: [{$ref: "#/components/parameters/CaseId"}]
+      responses:
+        "202": {description: Pipeline restarted from the beginning, content: {application/json: {schema: {$ref: "#/components/schemas/Accepted"}}}}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "409":
+          description: rerun_unavailable (approved, submitted, in-review, paid, other-denial) or case_running
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Error"}
+              example: {error: {code: rerun_unavailable, message: "A submitted appeal cannot be re-run. Reset the demo first."}}
+  /api/cases/{caseId}/packets/{version}/approve-and-submit:
+    post:
+      operationId: approveAndSubmit
+      description: |
+        Human action. Checks role, latest version, packet and case status, then uploads the letter,
+        cited documents, and policy snapshot, and creates the appeal with
+        Idempotency-Key appeal-<caseId>-v<version>. Repeating the call re-sends the same key and
+        bytes and returns the same confirmation.
+      parameters:
+        - {$ref: "#/components/parameters/CaseId"}
+        - {$ref: "#/components/parameters/Version"}
+        - {name: X-Persona, in: header, required: true, schema: {type: string}, example: billing-approver-01}
+      responses:
+        "200":
+          description: Payer confirmed (201 or idempotent 200 from the payer)
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Submission"}
+              example:
+                idempotencyKey: appeal-case-100028-v1
+                status: confirmed
+                appealId: NST-APL-80126
+                expectedResolutionDays: 14
+                payerStatus: received
+                display: "Submitted · Northstar confirmation NST-APL-80126 · expected resolution 14 days"
+        "403":
+          description: wrong_role (refusal is recorded on the timeline; nothing is sent to the payer)
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Error"}
+              example: {error: {code: wrong_role, message: "viewer-01 (viewer) cannot approve; role authorized-billing-user required"}}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "409":
+          description: not_latest_version or not_ready_for_review
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Error"}
+        "422":
+          description: payer_refused (payer error code and message passed through; case is not submitted)
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Error"}
+              example: {error: {code: payer_refused, message: "appeal_window_closed: Appeal deadline 2026-10-19 has passed"}}
+  /api/demo/simulate-remit:
+    post:
+      operationId: simulateRemit
+      description: Uploads fixtures/x12/era-2026-09-12.835 to the clearinghouse inbox over SFTP. The poller picks it up.
+      responses:
+        "202": {description: Delivered, content: {application/json: {schema: {type: object, properties: {delivered: {type: string, example: era-2026-09-12.835}}}}}}
+  /api/demo/missing-evidence:
+    put:
+      operationId: setMissingEvidence
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: object, required: [enabled], properties: {enabled: {type: boolean}}}
+      responses:
+        "200": {description: Toggle state, content: {application/json: {schema: {type: object, properties: {enabled: {type: boolean}}}}}}
+  /api/demo/reset:
+    post:
+      operationId: resetDemo
+      description: Clears SQLite rows, empties the 835 inbox, resets mock-hospital toggle and mock payer records. Keeps config (AI mode).
+      responses:
+        "204": {description: Reset complete}
+components:
+  parameters:
+    CaseId: {name: caseId, in: path, required: true, schema: {type: string}, example: case-100028}
+    Version: {name: version, in: path, required: true, schema: {type: integer, minimum: 1}, example: 1}
+  responses:
+    NotFound:
+      description: not_found
+      content: {application/json: {schema: {$ref: "#/components/schemas/Error"}}}
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties: {code: {type: string}, message: {type: string}}
+    Accepted:
+      type: object
+      properties: {caseId: {type: string}, running: {type: boolean}}
+    Config:
+      type: object
+      required: [synthetic, demoDate, aiMode, model, missingEvidence, baseUrls]
+      properties:
+        synthetic: {type: boolean, const: true}
+        demoDate: {type: string, format: date}
+        aiMode: {type: string, enum: [live, replay]}
+        model: {type: string}
+        missingEvidence: {type: boolean}
+        baseUrls:
+          type: object
+          properties: {clearinghouse: {type: string}, ehr: {type: string}, payer: {type: string}}
+    Persona:
+      type: object
+      required: [userId, role, canApprove]
+      properties: {userId: {type: string}, role: {type: string}, canApprove: {type: boolean}}
+    Queue:
+      type: object
+      properties:
+        cases:
+          type: array
+          items:
+            type: object
+            properties: {caseId: {type: string}, headline: {type: string}, status: {$ref: "#/components/schemas/CaseStatus"}, running: {type: boolean}}
+        summary:
+          type: object
+          properties: {paidClaims: {type: integer}, otherDenials: {type: integer}, lines: {type: array, items: {type: string}}}
+        otherLane: {type: array, items: {type: object}}
+        remitFiles: {type: array, items: {type: object}}
+    CaseStatus:
+      type: string
+      enum: [new, claim-matched, needs-review, evidence-gathered, needs-evidence, ready-for-review, approved, submitted, in-review, paid, other-denial]
+    CaseDetail:
+      type: object
+      description: Field shapes follow data-model.md §2.
+      required: [case, running, actions, timeline]
+      properties:
+        case:
+          type: object
+          description: Case row (caseId, lane, status, headline, identifiers, amounts, needsReviewField, lastError)
+        running: {type: boolean}
+        statusLine: {type: string, example: "Ready for review"}
+        identity:
+          type: object
+          properties:
+            chain: {type: array, items: {type: string}, example: [HSP-CLM-100028, "837 HSP-CLM-100028", encounter-20260810-42]}
+            checks: {type: array, items: {type: object, description: IdentityCheck}}
+        evidence:
+          type: object
+          properties:
+            items: {type: array, items: {type: object, description: EvidenceItem}}
+            excludedLine: {type: string, example: "1 record excluded (outside 6-month lookback)"}
+            searchCounts: {type: object, additionalProperties: {type: integer}, example: {MedicationRequest: 0}}
+        payerDecision: {type: object, description: A6 decision}
+        policy: {type: object, properties: {label: {type: string, example: "Policy NST-IMG-2026-04 v2026.04"}, title: {type: string}}}
+        deadline:
+          type: object
+          properties:
+            line: {type: string, example: "Appeal deadline: October 19, 2026 (37 days left)"}
+            warning: {type: [string, "null"]}
+        matrix: {type: object, description: EvidenceMatrix (A8 shape)}
+        completenessLine: {type: string, example: "Evidence completeness: 3/3 policy criteria satisfied"}
+        needsLine: {type: [string, "null"], example: "Needs 1 item"}
+        recoveryLine: {type: string, example: "Expected recovery: $4,800"}
+        tasks: {type: array, items: {type: object, description: A8 task shape plus closeNote}}
+        packet:
+          type: [object, "null"]
+          description: Latest packet (version, status, letter header with sources, body statements with citationIds, attachments, pdfUrl, blockedReason)
+        submission: {oneOf: [{$ref: "#/components/schemas/Submission"}, {type: "null"}]}
+        aiCost:
+          type: object
+          properties:
+            inputTokens: {type: integer}
+            cachedTokens: {type: integer}
+            outputTokens: {type: integer}
+            reasoningTokens: {type: integer}
+            usd: {type: number}
+            line: {type: string, example: "AI cost for this case (estimate): $0.0021"}
+        actions:
+          type: object
+          properties:
+            canRerun: {type: boolean}
+            rerunUnavailableReason: {type: [string, "null"]}
+            canApprove: {type: boolean}
+        timeline: {type: array, items: {type: object, description: Audit event (step, summary, ehrRequests, llmUsage, createdAt)}}
+    Submission:
+      type: object
+      properties:
+        idempotencyKey: {type: string}
+        status: {type: string, enum: [pending, confirmed, refused]}
+        appealId: {type: [string, "null"]}
+        expectedResolutionDays: {type: [integer, "null"]}
+        payerStatus: {type: [string, "null"], enum: [received, in-review, null]}
+        errorCode: {type: [string, "null"]}
+        errorMessage: {type: [string, "null"]}
+        display: {type: [string, "null"]}

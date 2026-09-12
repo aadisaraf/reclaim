@@ -1,0 +1,23 @@
+{
+  "resourceType": "Procedure",
+  "id": "procedure-902",
+  "status": "completed",
+  "code": {
+    "coding": [
+      {
+        "system": "http://www.ama-assn.org/go/cpt",
+        "code": "72148",
+        "display": "MRI lumbar spine without contrast"
+      }
+    ]
+  },
+  "subject": {
+    "reference": "Patient/patient-0042"
+  },
+  "basedOn": [
+    {
+      "reference": "ServiceRequest/order-901"
+    }
+  ],
+  "performedDateTime": "2026-08-10"
+}

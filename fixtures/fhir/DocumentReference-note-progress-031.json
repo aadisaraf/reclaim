@@ -1,0 +1,20 @@
+{
+  "resourceType": "DocumentReference",
+  "id": "note-progress-031",
+  "status": "current",
+  "type": {
+    "text": "Progress note"
+  },
+  "subject": {
+    "reference": "Patient/patient-0042"
+  },
+  "date": "2026-08-10T00:00:00Z",
+  "content": [
+    {
+      "attachment": {
+        "contentType": "text/plain",
+        "url": "Binary/note-progress-031"
+      }
+    }
+  ]
+}

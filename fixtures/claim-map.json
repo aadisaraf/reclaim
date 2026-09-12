@@ -1,0 +1,10 @@
+{
+  "HSP-CLM-100028": {
+    "patientId": "patient-0042",
+    "mrn": "MRN-0042",
+    "encounterId": "encounter-20260810-42",
+    "dateOfService": "2026-08-10",
+    "procedureCode": "72148",
+    "diagnosisCode": "M54.16"
+  }
+}

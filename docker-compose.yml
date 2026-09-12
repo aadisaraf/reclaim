@@ -1,0 +1,64 @@
+services:
+  app:
+    build: .
+    ports: ["8000:8000"]
+    environment:
+      - DATABASE_PATH=/data/reclaim.db
+    env_file: [{ path: .env, required: false }]
+    volumes:
+      - ./.local/data:/data
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    depends_on:
+      - mock-hospital
+      - mock-northstar-health
+      - mock-clearinghouse
+
+  web:
+    build:
+      context: ./web
+      args:
+        NEXT_PUBLIC_API_BASE: http://localhost:8000
+    ports: ["3000:3000"]
+    env_file: [{ path: .env, required: false }]
+    depends_on:
+      - app
+
+  mock-hospital:
+    build: .
+    command: ["uv", "run", "uvicorn", "mocks.hospital.app:app", "--host", "0.0.0.0", "--port", "80"]
+    env_file: [{ path: .env, required: false }]
+    networks:
+      default:
+        aliases: ["mock-hospital.example"]
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:80/fhir/R4/.well-known/smart-configuration')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mock-northstar-health:
+    build: .
+    command: ["uv", "run", "uvicorn", "mocks.northstar.app:app", "--host", "0.0.0.0", "--port", "80"]
+    env_file: [{ path: .env, required: false }]
+    networks:
+      default:
+        aliases: ["mock-northstar-health.example"]
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:80/api/v1/_control/reset', data=b'')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mock-clearinghouse:
+    image: atmoz/sftp
+    platform: linux/amd64
+    command: "reclaim:${SFTP_PASSWORD}:1001"
+    ports: ["2222:22"]
+    volumes:
+      - ./fixtures/x12/HSP-CLM-100028.837:/home/reclaim/claim-archive/837/HSP-CLM-100028.837:ro
+      - ./.local/sftp/outbound-835:/home/reclaim/outbound/835
+      - ./.local/sftp/ssh_host_ed25519_key:/etc/ssh/ssh_host_ed25519_key
