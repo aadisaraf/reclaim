@@ -569,7 +569,7 @@ satisfied by verified excerpts. Forged and paraphrased citations are rejected.
 
 ### Tests (write first, must fail)
 
-- [ ] T073 [P] [US4] Write `tests/unit/test_verifier.py` for `verify_matrix(proposal, evidence_set, policy)`.
+- [X] T073 [P] [US4] Write `tests/unit/test_verifier.py` for `verify_matrix(proposal, evidence_set, policy)`.
   Excerpts are hand-copied from the fixture note texts.
   - Hero citations verify:
     - R1: condition-100 and note-progress-031
@@ -600,7 +600,7 @@ satisfied by verified excerpts. Forged and paraphrased citations are rejected.
     - Usage maps `input_tokens`, `cached_tokens`, `output_tokens`, and `reasoning_tokens`.
     - `cost_usd(usage, settings)` = (input−cached)×0.20/1M + cached×0.02/1M + output×1.20/1M.
     - Recording writes only `{step, key, model, effort, output, usage}`.
-- [ ] T075 [P] [US4] Write `tests/contract/test_payer_adapter.py`: `NorthstarPayerAdapter` against
+- [X] T075 [P] [US4] Write `tests/contract/test_payer_adapter.py`: `NorthstarPayerAdapter` against
   the mock payer ASGI app.
   - `get_decision` returns the A6 values.
   - `get_document` returns PDF bytes.
@@ -615,7 +615,7 @@ satisfied by verified excerpts. Forged and paraphrased citations are rejected.
   - With an appeal deadline of 2026-10-15 the warning names both "October 15, 2026" and
     "October 19, 2026", and the deadline of record stays 2026-10-15.
   - `deadline_line` is "Appeal deadline: October 19, 2026 (37 days left)".
-- [ ] T077 [US4] Write `tests/integration/test_matrix_pipeline.py` and add `FakeLlmClient` to
+- [X] T077 [US4] Write `tests/integration/test_matrix_pipeline.py` and add `FakeLlmClient` to
   `tests/fakes.py`. `FakeLlmClient` returns queued hand-written outputs and records each call's
   step, effort, and input.
   - The hero case reaches `payer_context` output with decision "denied", 2026-08-20, CO-50,
@@ -630,7 +630,7 @@ satisfied by verified excerpts. Forged and paraphrased citations are rejected.
 
 ### Implementation
 
-- [ ] T078 [US4] Create `src/reclaim/verify.py`: `verify_matrix(proposal, evidence_set, policy) ->
+- [X] T078 [US4] Create `src/reclaim/verify.py`: `verify_matrix(proposal, evidence_set, policy) ->
   (EvidenceMatrix, list[Rejection])`, implementing the "Citation verified" and "Matrix" rules in
   data-model.md §3.
 - [X] T079 [US4] Create `src/reclaim/adapters/llm.py`:
@@ -647,14 +647,14 @@ satisfied by verified excerpts. Forged and paraphrased citations are rejected.
   - Computes the deadline from the decision and `policy.appealWindowDays`.
   - A 404 gives `needs-review` with `payerClaimId`.
   - Writes one audit event.
-- [ ] T082 [US4] Create `src/reclaim/prompts/__init__.py` and `src/reclaim/prompts/build_matrix.py`.
+- [X] T082 [US4] Create `src/reclaim/prompts/__init__.py` and `src/reclaim/prompts/build_matrix.py`.
   - `INSTRUCTIONS` and `OUTPUT_RULES` constants: cite only listed resources, excerpts copied
     verbatim, `missing` with a reason when no evidence exists.
   - The strict `MatrixProposal` Pydantic model.
   - `build_input(policy, evidence_set, rejections=None)`: first message the policy JSON, second
     the trimmed in-window candidates whose type is in any requirement's `evidenceTypes`, and a
     rejections message appended when retrying.
-- [ ] T083 [US4] Create `src/reclaim/steps/build_matrix.py`: `build_matrix(ctx, case)`.
+- [X] T083 [US4] Create `src/reclaim/steps/build_matrix.py`: `build_matrix(ctx, case)`.
   - LLM call at `settings.effort_build_matrix` with `max_output_tokens` 6000 and
     `prompt_cache_key=policy_id`.
   - `verify_matrix`; if any citation was rejected, one retry at `high` with 12000 tokens.
