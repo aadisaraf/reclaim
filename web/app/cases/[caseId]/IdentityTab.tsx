@@ -1,4 +1,5 @@
 import { Identity, TimelineEvent } from "@/lib/api";
+import { CheckCircleIcon, XCircleIcon, DocumentStackIcon } from "../../components/icons";
 
 export default function IdentityTab({
   identity,
@@ -18,6 +19,9 @@ export default function IdentityTab({
       <div>
         <h3 style={{ fontSize: "var(--text-base)", marginBottom: "var(--space-sm)" }}>Identity chain</h3>
         <div className="code-value" style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-sm)", alignItems: "center" }}>
+          <span style={{ display: "flex", alignItems: "center", color: "var(--color-muted-foreground)" }}>
+            <DocumentStackIcon size={16} />
+          </span>
           {identity.chain.map((link, i) => (
             <span key={i} style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
               <span className="badge badge-progress">{link}</span>
@@ -58,6 +62,7 @@ export default function IdentityTab({
                 <td className="code-value">{check.valueB ?? "—"}</td>
                 <td>
                   <span className={`badge ${check.passed ? "badge-success" : "badge-attention"}`}>
+                    {check.passed ? <CheckCircleIcon size={16} /> : <XCircleIcon size={16} />}
                     {check.passed ? "Passed" : "Failed"}
                   </span>
                 </td>

@@ -93,11 +93,28 @@ export default function Header() {
           {config && (
             <div
               className="code-value"
-              style={{ fontSize: "var(--text-xs)", color: "var(--color-muted-foreground)", textAlign: "right" }}
+              style={{
+                fontSize: "var(--text-xs)",
+                color: "var(--color-muted-foreground)",
+                textAlign: "right",
+                maxWidth: 260,
+              }}
             >
-              <div>clearinghouse: {config.baseUrls.clearinghouse}</div>
-              <div>ehr: {config.baseUrls.ehr}</div>
-              <div>payer: {config.baseUrls.payer}</div>
+              {(
+                [
+                  ["clearinghouse", config.baseUrls.clearinghouse],
+                  ["ehr", config.baseUrls.ehr],
+                  ["payer", config.baseUrls.payer],
+                ] as const
+              ).map(([label, url]) => (
+                <div
+                  key={label}
+                  title={`${label}: ${url}`}
+                  style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                >
+                  {label}: {url}
+                </div>
+              ))}
             </div>
           )}
           <label style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>

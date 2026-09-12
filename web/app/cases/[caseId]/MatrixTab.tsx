@@ -1,4 +1,6 @@
 import { Deadline, EvidenceMatrix, PayerDecision, Policy, getCaseDocumentUrl } from "@/lib/api";
+import { AlertCircleIcon, CheckCircleIcon } from "../../components/icons";
+import StatCards from "../../components/StatCards";
 
 function requirementText(row: { requirementId: string; requirementText?: string }, policy: Policy | null): string {
   if (row.requirementText) return row.requirementText;
@@ -27,6 +29,18 @@ export default function MatrixTab({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-lg)" }}>
+      <StatCards
+        stats={[
+          {
+            key: "completeness",
+            icon: <CheckCircleIcon size={16} />,
+            label: "Policy criteria satisfied",
+            value: matrix.summary.satisfied,
+            ofValue: matrix.summary.total,
+          },
+        ]}
+      />
+
       <div>
         {policy && (
           <>
@@ -61,6 +75,7 @@ export default function MatrixTab({
                 {row.requirementId}: {requirementText(row, policy)}
               </span>
               <span className={`badge ${row.status === "satisfied" ? "badge-success" : "badge-attention"}`}>
+                {row.status === "satisfied" ? <CheckCircleIcon size={16} /> : <AlertCircleIcon size={16} />}
                 {row.status === "satisfied" ? "Satisfied" : "Missing"}
               </span>
             </div>

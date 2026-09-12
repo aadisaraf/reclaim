@@ -281,6 +281,12 @@ export interface CaseRow {
   amount: number | null;
   needsReviewField: string | null;
   lastError: string | null;
+  // Extrapolated from data-model.md §1 `cases` table (denial_code, denial_reason, payer,
+  // created_at columns exist there); not confirmed on the CaseDetail wire shape yet, so optional.
+  denialCode?: string;
+  denialReason?: string;
+  payer?: string;
+  createdAt?: string;
 }
 
 export interface CaseDetail {

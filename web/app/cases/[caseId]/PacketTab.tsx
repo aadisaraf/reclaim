@@ -11,6 +11,7 @@ import {
   getPacketPdfUrl,
 } from "@/lib/api";
 import { currentPersona } from "../../components/Header";
+import { AlertCircleIcon, CheckCircleIcon } from "../../components/icons";
 
 function citationsFor(matrix: EvidenceMatrix | null, requirementIds: string[], citationIds: string[]): Citation[] {
   if (!matrix) return [];
@@ -78,14 +79,38 @@ export default function PacketTab({
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-lg)" }}>
       <div>
         {statusLines.map((line, i) => (
-          <p key={i} style={{ margin: "2px 0", fontWeight: i === 0 ? 600 : 400 }}>
+          <p
+            key={i}
+            style={{
+              margin: "2px 0",
+              fontWeight: i === 0 ? 600 : 400,
+              display: "flex",
+              alignItems: "center",
+              gap: "var(--space-xs)",
+            }}
+          >
+            {i === 0 &&
+              (packet.status === "ready-for-review" ? (
+                <CheckCircleIcon size={16} />
+              ) : (
+                <AlertCircleIcon size={16} />
+              ))}
             {line}
           </p>
         ))}
       </div>
 
       {packet.status === "blocked" && (
-        <div className="badge badge-attention" style={{ display: "block", padding: "var(--space-sm) var(--space-md)" }}>
+        <div
+          className="badge badge-attention"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "var(--space-xs)",
+            padding: "var(--space-sm) var(--space-md)",
+          }}
+        >
+          <AlertCircleIcon size={16} />
           Blocked: {packet.blockedReason}
         </div>
       )}
@@ -120,21 +145,33 @@ export default function PacketTab({
                     >
                       {statement.text}
                     </p>
-                    {isOpen && (
-                      <div style={{ marginTop: "var(--space-sm)", borderTop: "1px solid var(--color-border)", paddingTop: "var(--space-sm)" }}>
-                        <p style={{ fontSize: "var(--text-xs)", color: "var(--color-muted-foreground)" }}>
-                          Requirements: {statement.requirementIds.join(", ")}
-                        </p>
-                        {citationsFor(matrix, statement.requirementIds, statement.citationIds).map((c) => (
-                          <p key={c.citationId} style={{ fontSize: "var(--text-sm)", fontStyle: "italic", margin: "var(--space-xs) 0" }}>
-                            <span className="code-value" style={{ fontStyle: "normal" }}>
-                              {c.resource}:
-                            </span>{" "}
-                            &ldquo;{c.excerpt}&rdquo;
+                    {isOpen && (() => {
+                      const verifiedCitations = citationsFor(matrix, statement.requirementIds, statement.citationIds);
+                      return (
+                        <div style={{ marginTop: "var(--space-sm)", borderTop: "1px solid var(--color-border)", paddingTop: "var(--space-sm)" }}>
+                          <p
+                            style={{
+                              fontSize: "var(--text-xs)",
+                              color: "var(--color-muted-foreground)",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "var(--space-xs)",
+                            }}
+                          >
+                            {verifiedCitations.length > 0 && <CheckCircleIcon size={14} />}
+                            Requirements: {statement.requirementIds.join(", ")}
                           </p>
-                        ))}
-                      </div>
-                    )}
+                          {verifiedCitations.map((c) => (
+                            <p key={c.citationId} style={{ fontSize: "var(--text-sm)", fontStyle: "italic", margin: "var(--space-xs) 0" }}>
+                              <span className="code-value" style={{ fontStyle: "normal" }}>
+                                {c.resource}:
+                              </span>{" "}
+                              &ldquo;{c.excerpt}&rdquo;
+                            </p>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                 );
               })}
@@ -165,7 +202,8 @@ export default function PacketTab({
 
       <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: "var(--space-lg)" }}>
         {submission?.appealId ? (
-          <p style={{ fontWeight: 600 }}>
+          <p style={{ fontWeight: 600, display: "flex", alignItems: "center", gap: "var(--space-xs)" }}>
+            <CheckCircleIcon size={16} />
             {submission.display}
             {submission.payerStatus === "in-review" && " · In review"}
           </p>

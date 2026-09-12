@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { CaseDetail, getCase, rerunCase } from "@/lib/api";
 import StatusBadge from "../../components/StatusBadge";
+import CaseSummaryPanel from "./CaseSummaryPanel";
 import IdentityTab from "./IdentityTab";
 import EvidenceTab from "./EvidenceTab";
 import MatrixTab from "./MatrixTab";
@@ -81,119 +83,125 @@ export default function CaseDetailPage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-lg)" }}>
-      <div>
-        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", flexWrap: "wrap" }}>
-          <h1 style={{ fontSize: "var(--text-lg)", margin: 0 }}>{detail.case.headline}</h1>
-          <StatusBadge status={detail.case.status} />
-          {detail.running && (
-            <span style={{ fontSize: "var(--text-xs)", color: "var(--color-muted-foreground)" }}>
-              Updating…
-            </span>
-          )}
-        </div>
-        {detail.statusLine && (
-          <p style={{ color: "var(--color-muted-foreground)", margin: "var(--space-xs) 0 0" }}>
-            {detail.statusLine}
-          </p>
-        )}
-        {detail.needsLine && (
-          <p style={{ color: "var(--status-attention-fg)", fontWeight: 600, margin: "var(--space-xs) 0 0" }}>
-            {detail.needsLine}
-          </p>
-        )}
-        {detail.case.lastError && (
-          <p style={{ color: "var(--color-destructive)", margin: "var(--space-xs) 0 0" }}>
-            Error: {detail.case.lastError}
-          </p>
-        )}
-        <div style={{ marginTop: "var(--space-md)" }}>
-          {detail.actions.canRerun ? (
-            <button className="btn-secondary" onClick={onRerun} disabled={rerunning}>
-              {rerunning ? "Re-running…" : "Re-run"}
-            </button>
-          ) : (
-            detail.actions.rerunUnavailableReason && (
-              <span style={{ fontSize: "var(--text-sm)", color: "var(--color-muted-foreground)" }}>
-                {detail.actions.rerunUnavailableReason}
-              </span>
-            )
-          )}
-          {rerunMessage && (
-            <span style={{ marginLeft: "var(--space-md)", fontSize: "var(--text-sm)", color: "var(--color-destructive)" }}>
-              {rerunMessage}
-            </span>
-          )}
-        </div>
-        {detail.tasks.length > 0 && (
-          <div style={{ marginTop: "var(--space-md)" }}>
-            <h3 style={{ fontSize: "var(--text-sm)", color: "var(--color-muted-foreground)", margin: "0 0 var(--space-xs)" }}>
-              Clinician requests
-            </h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xs)" }}>
-              {detail.tasks.map((t) => (
-                <div key={t.taskId} className="card" style={{ padding: "var(--space-sm) var(--space-md)" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", gap: "var(--space-md)" }}>
-                    <span className="code-value" style={{ fontSize: "var(--text-xs)" }}>
-                      {t.taskId} · {t.assigneeRole}
-                    </span>
-                    <span className={`badge ${t.status === "open" ? "badge-attention" : "badge-success"}`}>
-                      {t.status}
-                    </span>
-                  </div>
-                  <p style={{ margin: "var(--space-xs) 0 0", fontSize: "var(--text-sm)" }}>{t.question}</p>
-                  {t.closeNote && (
-                    <p style={{ margin: "var(--space-xs) 0 0", fontSize: "var(--text-sm)", color: "var(--color-muted-foreground)" }}>
-                      {t.closeNote}
-                    </p>
-                  )}
-                </div>
-              ))}
+      <nav className="breadcrumb">
+        <Link href="/">Case queue</Link>
+        <span>/</span>
+        <span className="breadcrumb-current">{detail.case.hospitalClaimId}</span>
+      </nav>
+
+      <div className="case-shell">
+        <CaseSummaryPanel
+          caseId={caseId}
+          caseRow={detail.case}
+          payerDecision={detail.payerDecision}
+          policy={detail.policy}
+          deadline={detail.deadline}
+          timeline={detail.timeline}
+          actions={detail.actions}
+          onRerun={onRerun}
+          rerunning={rerunning}
+          rerunMessage={rerunMessage}
+        />
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-lg)", minWidth: 0 }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", flexWrap: "wrap" }}>
+              <h1 style={{ fontSize: "var(--text-lg)", margin: 0 }}>{detail.case.headline}</h1>
+              <StatusBadge status={detail.case.status} />
+              {detail.running && (
+                <span style={{ fontSize: "var(--text-xs)", color: "var(--color-muted-foreground)" }}>
+                  Updating…
+                </span>
+              )}
             </div>
+            {detail.statusLine && (
+              <p style={{ color: "var(--color-muted-foreground)", margin: "var(--space-xs) 0 0" }}>
+                {detail.statusLine}
+              </p>
+            )}
+            {detail.needsLine && (
+              <p style={{ color: "var(--status-attention-fg)", fontWeight: 600, margin: "var(--space-xs) 0 0" }}>
+                {detail.needsLine}
+              </p>
+            )}
+            {detail.case.lastError && (
+              <p style={{ color: "var(--color-destructive)", margin: "var(--space-xs) 0 0" }}>
+                Error: {detail.case.lastError}
+              </p>
+            )}
           </div>
-        )}
-      </div>
 
-      <div className="tabs" role="tablist">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            role="tab"
-            aria-selected={tab === t.id}
-            className="tab"
-            onClick={() => setTab(t.id)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+          {detail.tasks.length > 0 && (
+            <div>
+              <h3 style={{ fontSize: "var(--text-sm)", color: "var(--color-muted-foreground)", margin: "0 0 var(--space-xs)" }}>
+                Clinician requests
+              </h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xs)" }}>
+                {detail.tasks.map((t) => (
+                  <div key={t.taskId} className="card" style={{ padding: "var(--space-sm) var(--space-md)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: "var(--space-md)" }}>
+                      <span className="code-value" style={{ fontSize: "var(--text-xs)" }}>
+                        {t.taskId} · {t.assigneeRole}
+                      </span>
+                      <span className={`badge ${t.status === "open" ? "badge-attention" : "badge-success"}`}>
+                        {t.status}
+                      </span>
+                    </div>
+                    <p style={{ margin: "var(--space-xs) 0 0", fontSize: "var(--text-sm)" }}>{t.question}</p>
+                    {t.closeNote && (
+                      <p style={{ margin: "var(--space-xs) 0 0", fontSize: "var(--text-sm)", color: "var(--color-muted-foreground)" }}>
+                        {t.closeNote}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
-      <div className="card">
-        {tab === "identity" && <IdentityTab identity={detail.identity} timeline={detail.timeline} />}
-        {tab === "evidence" && <EvidenceTab evidence={detail.evidence} policy={detail.policy} />}
-        {tab === "matrix" && (
-          <MatrixTab
-            caseId={caseId}
-            matrix={detail.matrix}
-            policy={detail.policy}
-            payerDecision={detail.payerDecision}
-            deadline={detail.deadline}
-            completenessLine={detail.completenessLine}
-          />
-        )}
-        {tab === "packet" && (
-          <PacketTab
-            caseId={caseId}
-            packet={detail.packet}
-            matrix={detail.matrix}
-            deadline={detail.deadline}
-            completenessLine={detail.completenessLine}
-            recoveryLine={detail.recoveryLine}
-            submission={detail.submission}
-            canApprove={detail.actions.canApprove}
-            onChanged={refresh}
-          />
-        )}
-        {tab === "timeline" && <TimelineTab timeline={detail.timeline} aiCost={detail.aiCost} />}
+          <div className="tabs" role="tablist">
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                role="tab"
+                aria-selected={tab === t.id}
+                className="tab"
+                onClick={() => setTab(t.id)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="card">
+            {tab === "identity" && <IdentityTab identity={detail.identity} timeline={detail.timeline} />}
+            {tab === "evidence" && <EvidenceTab evidence={detail.evidence} policy={detail.policy} />}
+            {tab === "matrix" && (
+              <MatrixTab
+                caseId={caseId}
+                matrix={detail.matrix}
+                policy={detail.policy}
+                payerDecision={detail.payerDecision}
+                deadline={detail.deadline}
+                completenessLine={detail.completenessLine}
+              />
+            )}
+            {tab === "packet" && (
+              <PacketTab
+                caseId={caseId}
+                packet={detail.packet}
+                matrix={detail.matrix}
+                deadline={detail.deadline}
+                completenessLine={detail.completenessLine}
+                recoveryLine={detail.recoveryLine}
+                submission={detail.submission}
+                canApprove={detail.actions.canApprove}
+                onChanged={refresh}
+              />
+            )}
+            {tab === "timeline" && <TimelineTab timeline={detail.timeline} aiCost={detail.aiCost} />}
+          </div>
+        </div>
       </div>
     </div>
   );
