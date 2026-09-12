@@ -47,7 +47,7 @@ The MVP is Phases 1–8, which covers demo steps 1–6 in replay mode.
 
 **Purpose**: an empty repo that installs, locks, and composes.
 
-- [ ] T001 Create `pyproject.toml` and `.python-version`, then run `uv lock` to produce `uv.lock`.
+- [X] T001 Create `pyproject.toml` and `.python-version`, then run `uv lock` to produce `uv.lock`.
   - `pyproject.toml`:
     - `requires-python = ">=3.12,<3.13"` and the `src/reclaim` package layout.
     - Dependencies: fastapi 0.141.1, uvicorn 0.52.4, pydantic 2.13.5, httpx 0.28.1,
@@ -56,7 +56,7 @@ The MVP is Phases 1–8, which covers demo steps 1–6 in replay mode.
     - `[tool.pytest.ini_options]` with `asyncio_mode = "auto"`, `testpaths = ["tests"]`, and a
       registered `docker` marker.
   - `.python-version` contains `3.12`.
-- [ ] T002 [P] Create `.gitignore` and `.env.example`.
+- [X] T002 [P] Create `.gitignore` and `.env.example`.
   - `.gitignore` covers `.env`, `.local/`, `.venv/`, `__pycache__/`, `web/node_modules/`,
     `web/.next/`, `web/test-results/`, and `web/playwright-report/`.
   - `.env.example` holds every key with safe defaults:
@@ -69,7 +69,7 @@ The MVP is Phases 1–8, which covers demo steps 1–6 in replay mode.
     - SFTP: `SFTP_HOST=mock-clearinghouse`, `SFTP_PORT=22`, `SFTP_USER=reclaim`, `SFTP_PASSWORD=`.
     - Mock credentials: `HOSPITAL_CLIENT_ID=reclaim`, `HOSPITAL_CLIENT_SECRET=`, `PAYER_TOKEN=`.
     - Paths: `DATABASE_PATH=.local/reclaim.db`, `NEXT_PUBLIC_API_BASE=http://localhost:8000`.
-- [ ] T003 [P] Create `Dockerfile` and `.dockerignore`.
+- [X] T003 [P] Create `Dockerfile` and `.dockerignore`.
   - `Dockerfile`: python:3.12-slim with uv. Copy `pyproject.toml` and `uv.lock`, then run
     `uv sync --locked --no-dev`. Copy `src/`, `mocks/`, and `fixtures/`. The default
     `CMD ["uv","run","uvicorn","reclaim.main:app","--host","0.0.0.0","--port","8000"]` is
@@ -83,7 +83,7 @@ The MVP is Phases 1–8, which covers demo steps 1–6 in replay mode.
 - [ ] T005 Run `npm install` in `web/` to produce `web/package-lock.json`, and create
   `web/Dockerfile`: a node:20 multi-stage build of the standalone output on port 3000, with the
   `NEXT_PUBLIC_API_BASE` build arg.
-- [ ] T006 Create `docker-compose.yml` with five services. All use `env_file: [{path: .env, required: false}]`.
+- [X] T006 Create `docker-compose.yml` with five services. All use `env_file: [{path: .env, required: false}]`.
   - `app`: root Dockerfile, port 8000, `DATABASE_PATH=/data/reclaim.db` on a `.local/data` bind mount.
   - `web`: `web/Dockerfile`, port 3000.
   - `mock-hospital`: root Dockerfile, command `uvicorn mocks.hospital.app:app --port 80`,
@@ -98,7 +98,7 @@ The MVP is Phases 1–8, which covers demo steps 1–6 in replay mode.
     - `./.local/sftp/ssh_host_ed25519_key` at `/etc/ssh/ssh_host_ed25519_key`
     - host port 2222
   - Healthchecks on app and both mocks.
-- [ ] T007 Create `Makefile`. Targets:
+- [X] T007 Create `Makefile`. Targets:
   - `setup`: `uv sync --locked`; `npm ci` in `web/`; if `.env` is missing, copy `.env.example`
     and fill `SFTP_PASSWORD`, `HOSPITAL_CLIENT_SECRET`, and `PAYER_TOKEN` with
     `uv run python -c "import secrets;print(secrets.token_urlsafe(24))"`; `mkdir -p .local/sftp/outbound-835 .local/data`;
@@ -108,7 +108,7 @@ The MVP is Phases 1–8, which covers demo steps 1–6 in replay mode.
   - `demo`: `docker compose up -d --build --wait`.
   - `reset`: `curl -fsS -X POST localhost:8000/api/demo/reset`.
   - `record`: `LLM_MODE=live uv run python scripts/record_replay.py`.
-- [ ] T008 [P] Write `tests/test_secrets_guard.py`. It asserts that `git check-ignore .env` exits 0.
+- [X] T008 [P] Write `tests/test_secrets_guard.py`. It asserts that `git check-ignore .env` exits 0.
   It also fails if any file under `fixtures/` or `docs/` matches `sk-[A-Za-z0-9_-]{20,}` or
   `OPENAI_API_KEY\s*=\s*\S+`, or if `.env.example` gives `OPENAI_API_KEY` a value.
 
@@ -124,7 +124,7 @@ store, both mocks, SFTP, and the app/web shell. No user story work starts until 
 
 ### Fixtures first (each validation test before its fixture)
 
-- [ ] T009 [P] Write `tests/fixtures/test_x12_fixtures.py`. It uses raw-text checks with a small
+- [X] T009 [P] Write `tests/fixtures/test_x12_fixtures.py`. It uses raw-text checks with a small
   inline `~`/`*` split and inline Luhn helper, not `src/`.
   - Both files match Appendix A2/A3 byte for byte (the expected text is pasted into the test).
   - ISA is 106 characters.
@@ -134,17 +134,17 @@ store, both mocks, SFTP, and the app/web shell. No user story work starts until 
   - NPIs `1234567893` and `1245319599` pass the Luhn check with the 80840 prefix.
   - CLM02 4800 = SV102.
   - `REF*6R` follows SVC on every 835 claim.
-- [ ] T010 [P] Create `fixtures/x12/era-2026-09-12.835` and `fixtures/x12/HSP-CLM-100028.837`,
+- [X] T010 [P] Create `fixtures/x12/era-2026-09-12.835` and `fixtures/x12/HSP-CLM-100028.837`,
   copied verbatim from Appendix A2 and A3 (one segment per line, LF).
-- [ ] T011 [P] Write `tests/fixtures/test_json_fixtures.py`. It asserts `fixtures/claim-map.json`
+- [X] T011 [P] Write `tests/fixtures/test_json_fixtures.py`. It asserts `fixtures/claim-map.json`
   equals the A4 JSON, `fixtures/policies/NST-IMG-2026-04.json` equals the A7 JSON,
   `fixtures/payer/payer-decision.json` equals the A6 decision JSON, and
   `fixtures/payer/appeal-response.json` equals the A6 201 body. Expected dicts are hand-pasted.
-- [ ] T012 [P] Create `fixtures/claim-map.json` (A4) and `fixtures/policies/NST-IMG-2026-04.json`
+- [X] T012 [P] Create `fixtures/claim-map.json` (A4) and `fixtures/policies/NST-IMG-2026-04.json`
   (A7), verbatim.
-- [ ] T013 [P] Create `fixtures/payer/payer-decision.json` (A6 decision) and
+- [X] T013 [P] Create `fixtures/payer/payer-decision.json` (A6 decision) and
   `fixtures/payer/appeal-response.json` (A6 201 body), verbatim.
-- [ ] T014 [P] Write `tests/fixtures/test_fhir_fixtures.py`.
+- [X] T014 [P] Write `tests/fixtures/test_fhir_fixtures.py`.
   - Every `fixtures/fhir/*.json` parses with `fhir.resources.R4B` models.
   - Hand-written R4 checks for Observation and DiagnosticReport `subject` = `Patient/patient-0042`.
   - A5 values:
@@ -166,91 +166,91 @@ store, both mocks, SFTP, and the app/web shell. No user story work starts until 
   - The decoded `note-progress-031` text contains none of "therapy", "conservative",
     "medication", or "exercise" (A1).
   - No MedicationRequest file exists.
-- [ ] T015 [P] Create `fixtures/fhir/Patient-patient-0042.json`,
+- [X] T015 [P] Create `fixtures/fhir/Patient-patient-0042.json`,
   `fixtures/fhir/Coverage-coverage-0042.json`, and
   `fixtures/fhir/Encounter-encounter-20260810-42.json` with the A5 values.
-- [ ] T016 [P] Create `fixtures/fhir/Practitioner-practitioner-lee.json`,
+- [X] T016 [P] Create `fixtures/fhir/Practitioner-practitioner-lee.json`,
   `fixtures/fhir/Organization-mock-hospital.json`, and
   `fixtures/fhir/Condition-condition-100.json` with the A5 values.
-- [ ] T017 [P] Create `fixtures/fhir/DiagnosticReport-report-xr-555.json`,
+- [X] T017 [P] Create `fixtures/fhir/DiagnosticReport-report-xr-555.json`,
   `fixtures/fhir/Observation-obs-pain-7781.json`, and
   `fixtures/fhir/ServiceRequest-order-901.json` with the A5 values. The ServiceRequest note is the
   clinician's rationale for the MRI.
-- [ ] T018 [P] Create `fixtures/fhir/Procedure-procedure-902.json`,
+- [X] T018 [P] Create `fixtures/fhir/Procedure-procedure-902.json`,
   `fixtures/fhir/DocumentReference-note-progress-031.json`, and
   `fixtures/fhir/Binary-note-progress-031.json`. The progress note text covers radiating leg pain,
   a positive straight-leg raise, focal weakness, and why an MRI is needed now, with no prior
   treatment. It includes "SYNTHETIC DEMO DATA".
-- [ ] T019 [P] Create `fixtures/fhir/DocumentReference-treatment-note-022.json` and
+- [X] T019 [P] Create `fixtures/fhir/DocumentReference-treatment-note-022.json` and
   `fixtures/fhir/Binary-treatment-note-022.json`. The text is a PT discharge summary: 6 weeks of
   physical therapy from 2026-06-02 to 2026-07-14 plus a home exercise program, symptoms not
   improved. It includes "SYNTHETIC DEMO DATA".
-- [ ] T020 [P] Create `fixtures/fhir/DocumentReference-note-ortho-2019-004.json` and
+- [X] T020 [P] Create `fixtures/fhir/DocumentReference-note-ortho-2019-004.json` and
   `fixtures/fhir/Binary-note-ortho-2019-004.json`: an unrelated 2019-03-02 ankle sprain visit.
-- [ ] T021 [P] Write `tests/fixtures/test_denial_letter.py`.
+- [X] T021 [P] Write `tests/fixtures/test_denial_letter.py`.
   - Importing `scripts/make_denial_letter.py` and calling `render()` twice gives identical bytes.
   - Those bytes equal `fixtures/payer/denial-letter.pdf`.
   - The bytes contain `October 19, 2026`, `denial-letter-99281`, `PAYER-CLM-99281`, `CO-50`, and
     `SYNTHETIC DEMO DATA`.
-- [ ] T022 Create `scripts/make_denial_letter.py`: reportlab with `invariant=1`,
+- [X] T022 Create `scripts/make_denial_letter.py`: reportlab with `invariant=1`,
   `pageCompression=0`, and Helvetica only, with a `render() -> bytes` function and a `__main__`
   that writes the file. Then run it to produce `fixtures/payer/denial-letter.pdf`.
 
 ### Core modules
 
-- [ ] T023 [P] Write `tests/unit/test_config.py`.
+- [X] T023 [P] Write `tests/unit/test_config.py`.
   - Defaults match `.env.example` (DEMO_TODAY 2026-09-12, LLM_MODE replay, gpt-5.6-luna, efforts
     medium/low, concurrency 4, the three prices).
   - Environment variables override the defaults.
   - `Settings.public()` returns demoDate, aiMode, model, and baseUrls, and none of
     `OPENAI_API_KEY`, `PAYER_TOKEN`, `HOSPITAL_CLIENT_SECRET`, or `SFTP_PASSWORD`.
-- [ ] T024 Create `src/reclaim/__init__.py` and `src/reclaim/config.py`: a frozen `Settings`
+- [X] T024 Create `src/reclaim/__init__.py` and `src/reclaim/config.py`: a frozen `Settings`
   dataclass loaded from the environment after `dotenv.load_dotenv()`, plus `Settings.public()`.
-- [ ] T025 [P] Write `tests/unit/test_tokenizer.py` per `contracts/x12-fixtures.md` §5.
+- [X] T025 [P] Write `tests/unit/test_tokenizer.py` per `contracts/x12-fixtures.md` §5.
   - Delimiters are read from ISA: a copy with `|` elements and `}` components tokenizes identically.
   - CRLF, LF, and no line breaks give the same segments.
   - Empty elements are preserved (hero CLP05 is `""`).
   - A truncated ISA raises `X12ParseError`.
-- [ ] T026 Create `src/reclaim/x12/__init__.py` and `src/reclaim/x12/tokenizer.py`:
+- [X] T026 Create `src/reclaim/x12/__init__.py` and `src/reclaim/x12/tokenizer.py`:
   `tokenize(text) -> list[Segment]` and `X12ParseError`, following `contracts/x12-fixtures.md` §1.
-- [ ] T027 [P] Write `tests/unit/test_repo.py` against a temp SQLite file.
+- [X] T027 [P] Write `tests/unit/test_repo.py` against a temp SQLite file.
   - `init_schema` creates the 8 tables in data-model.md §1.
   - `insert_remit_file` returns False for a duplicate sha256.
   - `upsert_case` enforces a unique `hospital_claim_id`.
   - `save_step_output` overwrites.
   - `reset_all` empties every table.
-- [ ] T028 Create `src/reclaim/repo.py`: `Repo(path)` with `init_schema`, `insert_remit_file`,
+- [X] T028 Create `src/reclaim/repo.py`: `Repo(path)` with `init_schema`, `insert_remit_file`,
   `upsert_case`, `get_case`, `list_cases`, `update_case`, `save_step_output`, `get_step_output`,
   `reset_all`, and the table DDL from data-model.md §1.
-- [ ] T029 [P] Write `tests/unit/test_audit.py`.
+- [X] T029 [P] Write `tests/unit/test_audit.py`.
   - `write_event(repo, case_id, step, summary, detail, ehr_requests, llm_usage)` stores one row.
   - Inbox events allow `case_id=None`.
   - `list_events(case_id)` returns rows in insertion order.
   - `write_event` raises if `summary` or `detail` contains a configured secret value.
-- [ ] T030 Create `src/reclaim/audit.py` with `write_event` and `list_events` (uses `Repo` and `Settings`).
-- [ ] T031 Create `src/reclaim/models.py` with the Pydantic v2 models from data-model.md §2:
+- [X] T030 Create `src/reclaim/audit.py` with `write_event` and `list_events` (uses `Repo` and `Settings`).
+- [X] T031 Create `src/reclaim/models.py` with the Pydantic v2 models from data-model.md §2:
   Remit, RemitClaim, Adjustment, OriginalClaim, ClaimMapEntry, IdentityCheck, EvidenceItem,
   EvidenceSet, PayerDecision, Policy, PolicySelection, Deadline, Citation, MatrixRow,
   EvidenceMatrix, LetterStatement, Letter, HeaderField, Persona, LlmUsage, plus the `CaseStatus`
   and `Lane` literals.
-- [ ] T032 Create `src/reclaim/adapters/__init__.py` and `src/reclaim/adapters/protocols.py` with
+- [X] T032 Create `src/reclaim/adapters/__init__.py` and `src/reclaim/adapters/protocols.py` with
   the six Protocols, their value models, and their exceptions, exactly as in
   `contracts/adapters.md`.
-- [ ] T033 [P] Write `tests/unit/test_policy_store.py`.
+- [X] T033 [P] Write `tests/unit/test_policy_store.py`.
   - Selecting (NSTHLTH01, "Commercial PPO", WA, 72148, 2026-08-10) returns NST-IMG-2026-04 v2026.04.
   - Each of these returns `policy=None` with the matching `failed_selector`: payer `OTHER01`,
     plan "Commercial HMO", state OR, procedure 72149, and date 2025-12-31.
   - `snapshot_bytes` is stable, sorted-key JSON.
-- [ ] T034 Create `src/reclaim/adapters/policy.py`: `FilePolicyStore(dir)` implementing
+- [X] T034 Create `src/reclaim/adapters/policy.py`: `FilePolicyStore(dir)` implementing
   `PolicyStore` over `fixtures/policies/*.json`. Selectors are checked in the order payerId,
   planType, state, procedureCode, dateOfService.
-- [ ] T035 Create `tests/conftest.py` (fixtures `settings`, `repo` on tmp_path, `fixtures_dir`)
+- [X] T035 Create `tests/conftest.py` (fixtures `settings`, `repo` on tmp_path, `fixtures_dir`)
   and `tests/fakes.py` (`FakeInbox` and `FakeArchive`, dict-backed implementations of
   `RemitInbox` and `ClaimArchive`).
 
 ### Mock services, SFTP, and contract tests
 
-- [ ] T036 [P] Write `tests/contract/test_mock_hospital.py` per `contracts/mock-hospital-fhir.md`.
+- [X] T036 [P] Write `tests/contract/test_mock_hospital.py` per `contracts/mock-hospital-fhir.md`.
   It uses `httpx.AsyncClient(transport=ASGITransport(app))`.
   - `/fhir/R4/.well-known/smart-configuration` returns 200.
   - `/auth/token` returns 200 with a good client and 401 `invalid_client` with a bad one.
@@ -265,10 +265,10 @@ store, both mocks, SFTP, and the app/web shell. No user story work starts until 
   - `PUT /_control/missing-evidence {"enabled":true}` drops DocumentReference to 2 and makes both
     `treatment-note-022` reads 404. `POST /_control/reset` restores them.
   - Every response is `application/fhir+json` with `X-Synthetic-Data: true`.
-- [ ] T037 Create `mocks/__init__.py`, `mocks/hospital/__init__.py`, and `mocks/hospital/app.py`:
+- [X] T037 Create `mocks/__init__.py`, `mocks/hospital/__init__.py`, and `mocks/hospital/app.py`:
   a FastAPI FHIR R4 mock that loads `fixtures/fhir/`, issues in-memory tokens, supports search by
   `patient` only, returns OperationOutcome errors, and has the `/_control` toggle, state, and reset.
-- [ ] T038 [P] Write `tests/contract/test_mock_payer.py` per
+- [X] T038 [P] Write `tests/contract/test_mock_payer.py` per
   `contracts/mock-northstar-payer.openapi.yaml`, using ASGITransport and an injectable clock and
   `DEMO_TODAY`.
   - Decision: 200 body equals `fixtures/payer/payer-decision.json`; 401 `unauthorized`; 404
@@ -288,7 +288,7 @@ store, both mocks, SFTP, and the app/web shell. No user story work starts until 
   - `GET /appeals/NST-APL-80126`: `received`; at clock +30 s, `in-review` with `updatedAt`
     `2026-09-12T18:32:30Z`; an unknown id returns 404 `appeal_not_found`.
   - `POST /_control/reset` clears appeals.
-- [ ] T039 Create `mocks/northstar/__init__.py` and `mocks/northstar/app.py`: a FastAPI mock of
+- [X] T039 Create `mocks/northstar/__init__.py` and `mocks/northstar/app.py`: a FastAPI mock of
   A6 under `/api/v1`, with a bearer token from `PAYER_TOKEN`, in-memory documents, appeals, and
   idempotency records, the `x-evaluation-order` from the contract, a `DEMO_TODAY` setting, an
   injectable `now()`, and `/_control/reset`.
@@ -340,7 +340,7 @@ text; a repeat delivery creates no cases; zero EHR requests are recorded.
 
 ### Tests (write first, must fail)
 
-- [ ] T046 [P] [US1] Write `tests/unit/test_remit835.py` per `contracts/x12-fixtures.md` §5.
+- [X] T046 [P] [US1] Write `tests/unit/test_remit835.py` per `contracts/x12-fixtures.md` §5.
   - Three claims.
   - Hero claim fields: `HSP-CLM-100028`, CLP02 `4`, 4800, 0, claim filing indicator `12`,
     `PAYER-CLM-99281`, member `MEMBER-448820`, NPI `1234567893`, DOS 2026-08-10, `HC`/`72148`,
@@ -349,7 +349,7 @@ text; a repeat delivery creates no cases; zero EHR requests are recorded.
   - Lanes are `medical-necessity`, `paid`, and `other-denial`.
   - Payer `NORTHSTAR HEALTH`/`NSTHLTH01`, payee NPI `1245319599`.
   - `RIVERA` does not appear in `model_dump_json()`.
-- [ ] T047 [P] [US1] Write `tests/unit/test_validate_835.py`.
+- [X] T047 [P] [US1] Write `tests/unit/test_validate_835.py`.
   - The fixture passes X-01 to X-10 and X-13.
   - In-test string-replaced copies each fail with exactly the expected rule ID:
     - `SE*37`→`SE*36` gives X-04.
@@ -357,7 +357,7 @@ text; a repeat delivery creates no cases; zero EHR requests are recorded.
     - BPR02 `280`→`290` gives X-08.
     - NPI `1234567893`→`1234567890` gives X-10.
     - GS08 `005010X221A1`→`004010X091A1` gives X-05.
-- [ ] T048 [P] [US1] Write `tests/integration/test_ingest.py` with `FakeInbox` and a temp repo.
+- [X] T048 [P] [US1] Write `tests/integration/test_ingest.py` with `FakeInbox` and a temp repo.
   - Delivering the fixture creates `case-100028` (lane `medical-necessity`, status `new`,
     headline "Northstar Health · CO-50 Medical necessity · $4,800", `payerClaimId`
     `PAYER-CLM-99281`), `case-100031` (`paid`), and `case-100035` (`other-denial`).
@@ -374,13 +374,13 @@ text; a repeat delivery creates no cases; zero EHR requests are recorded.
 
 ### Implementation
 
-- [ ] T050 [US1] Create `src/reclaim/x12/remit835.py`: `parse_835(text) -> Remit`, with loops per
+- [X] T050 [US1] Create `src/reclaim/x12/remit835.py`: `parse_835(text) -> Remit`, with loops per
   `contracts/x12-fixtures.md` §2, the denial code rule, and the lane table. Names are never read
   into the model.
-- [ ] T051 [US1] Create `src/reclaim/x12/validate.py`:
+- [X] T051 [US1] Create `src/reclaim/x12/validate.py`:
   `validate_835(segments, remit) -> list[RuleFailure]` implementing X-01 to X-10 and X-13, with a
   Luhn/80840 NPI helper.
-- [ ] T052 [US1] Create `src/reclaim/steps/__init__.py` and `src/reclaim/steps/ingest.py`:
+- [X] T052 [US1] Create `src/reclaim/steps/__init__.py` and `src/reclaim/steps/ingest.py`:
   `ingest(repo, name, content) -> IngestResult`.
   - Computes sha256 and dedupes; on a repeat, writes the audit event and returns.
   - Tokenizes, parses, and validates.
@@ -424,17 +424,17 @@ for that comes in Phase 9).
 
 ### Tests (write first, must fail)
 
-- [ ] T056 [P] [US2] Write `tests/unit/test_claim837.py`.
+- [X] T056 [P] [US2] Write `tests/unit/test_claim837.py`.
   - Fields equal the A3 "Extracted" line: `HSP-CLM-100028`, `MEMBER-448820`, `NSTHLTH01`, billing
     NPI `1245319599`, state `WA`, rendering `1234567893`, `HC`/`72148`, 1 unit, 4800, DOS
     2026-08-10.
   - Diagnosis `M5416` is normalized to `M54.16`; group `NST-PPO-GRP-01`; frequency code `1`.
   - `RIVERA` does not appear in the model dump.
-- [ ] T057 [P] [US2] Write `tests/unit/test_validate_837.py`.
+- [X] T057 [P] [US2] Write `tests/unit/test_validate_837.py`.
   - The fixture passes X-01 to X-05 and X-10 to X-13.
   - `SE*25`→`SE*24` gives X-04; `SV1*HC:72148*4800`→`SV1*HC:72148*4700` gives X-11;
     `HL*2*1*22*0`→`HL*2*3*22*0` gives X-12.
-- [ ] T058 [P] [US2] Write `tests/unit/test_identity.py` for `run_identity_gate(remit_claim, original_claim)`.
+- [X] T058 [P] [US2] Write `tests/unit/test_identity.py` for `run_identity_gate(remit_claim, original_claim)`.
   - The hero case returns 6 passed checks with the spec US2 table values.
   - Six separate tests each change exactly one 837 field (CLM01, NM1*IL NM109, DTP*472, NM1*PR
     NM109, NM1*82 NM109, SV101) and assert failure naming `claimId`, `memberId`, `dateOfService`,
@@ -460,12 +460,12 @@ for that comes in Phase 9).
 
 ### Implementation
 
-- [ ] T061 [US2] Create `src/reclaim/x12/claim837.py` (`parse_837(text) -> OriginalClaim`, per
+- [X] T061 [US2] Create `src/reclaim/x12/claim837.py` (`parse_837(text) -> OriginalClaim`, per
   contract §3) and add `validate_837` (X-01 to X-05, X-10 to X-13) to `src/reclaim/x12/validate.py`.
-- [ ] T062 [US2] Create `src/reclaim/steps/fetch_claim.py`: `fetch_claim(ctx, case)` calls
+- [X] T062 [US2] Create `src/reclaim/steps/fetch_claim.py`: `fetch_claim(ctx, case)` calls
   `ClaimArchive.get_837`, then parses and validates. If the 837 is missing or invalid the status
   is `needs-review` with `originalClaim`. Writes one audit event.
-- [ ] T063 [US2] Create `src/reclaim/steps/resolve_identity.py`.
+- [X] T063 [US2] Create `src/reclaim/steps/resolve_identity.py`.
   - `run_identity_gate` and `check_post_read` as pure functions.
   - `resolve_identity(ctx, case)` loads `fixtures/claim-map.json` and runs the gate. On a pass,
     status is `claim-matched` and the output includes `ClaimMapEntry`. On a fail, status is
@@ -496,13 +496,13 @@ and fetch Binaries for in-window notes only.
 
 ### Tests (write first, must fail)
 
-- [ ] T066 [P] [US3] Write `tests/unit/test_lookback.py` for `src/reclaim/steps/gather_evidence.py` helpers.
+- [X] T066 [P] [US3] Write `tests/unit/test_lookback.py` for `src/reclaim/steps/gather_evidence.py` helpers.
   - `lookback_window(date(2026,8,10), 6)` is `(2026-02-10, 2026-08-10)`.
   - `lookback_window(date(2026,8,31), 6)` starts 2026-02-28.
   - `resource_date` uses the right field per type (data-model.md §3).
   - Inclusive edges are included; 2019-03-02 is excluded with "outside 6-month lookback"; a
     resource with no date is excluded with "no date".
-- [ ] T067 [P] [US3] Write `tests/contract/test_ehr_client.py`: `HttpEhrClient` against the
+- [X] T067 [P] [US3] Write `tests/contract/test_ehr_client.py`: `HttpEhrClient` against the
   mock-hospital ASGI app.
   - The token is fetched once and reused.
   - Every request sends `Accept: application/fhir+json` and a Bearer token.
@@ -510,7 +510,7 @@ and fetch Binaries for in-window notes only.
   - `search` returns resources from the entries (MedicationRequest `[]`).
   - `read_binary` decodes to bytes.
   - A 404 raises `EhrNotFound`.
-- [ ] T068 [US3] Write `tests/integration/test_gather_evidence.py` and add a
+- [X] T068 [US3] Write `tests/integration/test_gather_evidence.py` and add a
   `fixture_ehr_client` fixture (HttpEhrClient over ASGITransport) to `tests/conftest.py`.
   - The hero case's `requests_made` equals, exactly:
     - Encounter/encounter-20260810-42
@@ -531,10 +531,10 @@ and fetch Binaries for in-window notes only.
 
 ### Implementation
 
-- [ ] T069 [US3] Create `src/reclaim/adapters/fhir.py`: `HttpEhrClient(base_url, token_url,
+- [X] T069 [US3] Create `src/reclaim/adapters/fhir.py`: `HttpEhrClient(base_url, token_url,
   client_id, client_secret, transport=None)` implementing `EhrClient` with httpx.AsyncClient and
   `EhrNotFound`.
-- [ ] T070 [US3] Create `src/reclaim/steps/gather_evidence.py` with `lookback_window`,
+- [X] T070 [US3] Create `src/reclaim/steps/gather_evidence.py` with `lookback_window`,
   `resource_date`, and `gather_evidence(ctx, case)`, doing the following in order:
   1. Read Encounter; run the post-read date and subject checks.
   2. Read Patient.
@@ -586,7 +586,7 @@ satisfied by verified excerpts. Forged and paraphrased citations are rejected.
       "All proposed citations failed verification:".
     - A proposal omitting R3 still yields a missing R3 row.
     - A duplicate R1 entry raises.
-- [ ] T074 [P] [US4] Write `tests/unit/test_llm_client.py`.
+- [X] T074 [P] [US4] Write `tests/unit/test_llm_client.py`.
   - `ReplayLlmClient`:
     - A recorded file returns output that re-validates plus usage.
     - A miss raises `ReplayMissError` naming the step.
@@ -609,7 +609,7 @@ satisfied by verified excerpts. Forged and paraphrased citations are rejected.
   - `create_appeal` gives `appeal_id` NST-APL-80126 with `replayed` False, then True on replay.
   - `get_appeal` returns the appeal.
   - An unknown claim raises `PayerError(404, "claim_not_found")`.
-- [ ] T076 [P] [US4] Write `tests/unit/test_deadline.py`.
+- [X] T076 [P] [US4] Write `tests/unit/test_deadline.py`.
   - `compute_deadline(decision_date=2026-08-20, appeal_deadline=2026-10-19, window_days=60,
     today=2026-09-12)` gives `days_left` 37, `policy_window_date` 2026-10-19, and warning None.
   - With an appeal deadline of 2026-10-15 the warning names both "October 15, 2026" and
@@ -633,15 +633,15 @@ satisfied by verified excerpts. Forged and paraphrased citations are rejected.
 - [ ] T078 [US4] Create `src/reclaim/verify.py`: `verify_matrix(proposal, evidence_set, policy) ->
   (EvidenceMatrix, list[Rejection])`, implementing the "Citation verified" and "Matrix" rules in
   data-model.md §3.
-- [ ] T079 [US4] Create `src/reclaim/adapters/llm.py`:
+- [X] T079 [US4] Create `src/reclaim/adapters/llm.py`:
   - `OpenAiLlmClient`: `OpenAI().with_options(timeout=45.0, max_retries=0)`, `responses.parse`,
     `store=False`, one jittered retry on 429/5xx, an optional `record_dir`.
   - `ReplayLlmClient`.
   - `replay_key()` and `cost_usd()`.
-- [ ] T080 [US4] Create `src/reclaim/adapters/payer.py`: `NorthstarPayerAdapter(base_url, token,
+- [X] T080 [US4] Create `src/reclaim/adapters/payer.py`: `NorthstarPayerAdapter(base_url, token,
   transport=None)` implementing `PayerAdapter`. It sends multipart uploads and the
   `Idempotency-Key` header, reads `Idempotent-Replayed`, and maps the error envelope to `PayerError`.
-- [ ] T081 [US4] Create `src/reclaim/steps/payer_context.py` with `compute_deadline` and
+- [X] T081 [US4] Create `src/reclaim/steps/payer_context.py` with `compute_deadline` and
   `deadline_line`, plus `payer_context(ctx, case)`.
   - Calls `get_decision` and `get_document`, storing the letter in the `documents` table.
   - Computes the deadline from the decision and `policy.appealWindowDays`.
