@@ -1,7 +1,9 @@
 from pathlib import Path
 
+import httpx
 import pytest
 
+from reclaim.adapters.fhir import HttpEhrClient
 from reclaim.config import Settings
 from reclaim.repo import Repo
 
@@ -23,3 +25,19 @@ def repo(tmp_path) -> Repo:
 @pytest.fixture
 def fixtures_dir() -> Path:
     return REPO_ROOT / "fixtures"
+
+
+@pytest.fixture
+def fixture_ehr_client(settings: Settings) -> HttpEhrClient:
+    from mocks.hospital import app as hospital_app
+
+    hospital_app.reset_state()
+    transport = httpx.ASGITransport(app=hospital_app.app)
+    base = "http://mock-hospital.example"
+    client = HttpEhrClient(
+        base_url=f"{base}/fhir/R4", token_url=f"{base}/auth/token",
+        client_id=settings.hospital_client_id, client_secret=settings.hospital_client_secret,
+        transport=transport,
+    )
+    yield client
+    hospital_app.reset_state()

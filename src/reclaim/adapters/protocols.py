@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Literal, Protocol, TypeVar
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from reclaim.models import Policy
 
@@ -134,12 +134,11 @@ class LlmUsage(BaseModel):
 
 
 class LlmResult(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     output: BaseModel
     usage: LlmUsage
     mode: Literal["live", "replay"]
-
-    class Config:
-        arbitrary_types_allowed = True
 
 
 class ReplayMissError(Exception):

@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS cases (
     payer_id TEXT,
     member_id TEXT,
     rendering_npi TEXT,
+    procedure_qualifier TEXT,
     procedure_code TEXT,
     date_of_service TEXT,
     denial_code TEXT,

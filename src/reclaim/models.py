@@ -24,6 +24,7 @@ class RemitClaim(BaseModel):
     patient_responsibility: float
     claim_filing_indicator: str
     payer_claim_id: str
+    payer_id: str
     member_id: str | None
     rendering_npi: str
     date_of_service: str
