@@ -1019,7 +1019,7 @@ run again with a fresh confirmation.
   quickstart (`make setup`, `make test`, `make demo`, the 6 clicks, `make reset`) linking
   `specs/001-denial-recovery/quickstart.md`, the architecture in 5 bullets, and "never put keys
   anywhere but `.env`".
-- [ ] T129 Run a dead-code sweep over `src/reclaim/`, `mocks/`, `scripts/`, and `web/`.
+- [X] T129 Run a dead-code sweep over `src/reclaim/`, `mocks/`, `scripts/`, and `web/`.
   - For every function, class, route, and component, `rg` for callers in the demo path or tests.
   - Record the findings in `specs/001-denial-recovery/dead-code-sweep.md`, listing each unused
     symbol with its file.
