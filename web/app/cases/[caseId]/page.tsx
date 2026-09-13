@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { CaseDetail, getCase, rerunCase } from "@/lib/api";
 import StatusBadge from "../../components/StatusBadge";
+import { BankIcon, ChevronLeftIcon, HospitalIcon, TruckIcon } from "../../components/icons";
 import CaseSummaryPanel from "./CaseSummaryPanel";
 import IdentityTab from "./IdentityTab";
 import EvidenceTab from "./EvidenceTab";
@@ -84,6 +85,9 @@ export default function CaseDetailPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-lg)" }}>
       <nav className="breadcrumb">
+        <Link href="/" style={{ display: "flex", alignItems: "center" }} aria-label="Back to case queue">
+          <ChevronLeftIcon size={16} />
+        </Link>
         <Link href="/">Case queue</Link>
         <span>/</span>
         <span className="breadcrumb-current">{detail.case.hospitalClaimId}</span>
@@ -119,6 +123,29 @@ export default function CaseDetailPage() {
                 {detail.statusLine}
               </p>
             )}
+            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", marginTop: "var(--space-sm)" }}>
+              {(detail.case.createdAt ?? detail.timeline[0]?.createdAt) && (
+                <span style={{ fontSize: "var(--text-sm)", color: "var(--color-muted-foreground)" }}>
+                  Created:{" "}
+                  <span className="code-value">{detail.case.createdAt ?? detail.timeline[0]?.createdAt}</span>
+                </span>
+              )}
+              <div className="system-chip-row">
+                <span className="system-chip" title="Clearinghouse (SFTP inbox)">
+                  <TruckIcon size={14} />
+                </span>
+                {detail.evidence && (
+                  <span className="system-chip" title="Mock hospital FHIR EHR">
+                    <HospitalIcon size={14} />
+                  </span>
+                )}
+                {detail.payerDecision && (
+                  <span className="system-chip" title="Northstar Health mock payer">
+                    <BankIcon size={14} />
+                  </span>
+                )}
+              </div>
+            </div>
             {detail.needsLine && (
               <p style={{ color: "var(--status-attention-fg)", fontWeight: 600, margin: "var(--space-xs) 0 0" }}>
                 {detail.needsLine}

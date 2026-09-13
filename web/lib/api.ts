@@ -389,3 +389,31 @@ export function storePersona(userId: string): void {
     // localStorage unavailable (private browsing, blocked); persona picker still works in-memory.
   }
 }
+
+export function currentPersona(): string {
+  return loadStoredPersona() ?? "billing-approver-01";
+}
+
+// Dispatched after a successful "Reset demo" so the topbar's base-URL / AI-mode display
+// refreshes without a full page reload.
+export const REFRESH_CONFIG_EVENT = "reclaim:refresh-config";
+// Dispatched whenever the persona picker changes, so other components (PacketTab's
+// "Approve and submit") can react without a shared context.
+export const PERSONA_CHANGED_EVENT = "reclaim:persona-changed";
+
+// ---- Queue status filters (sidebar "Cases" sub-items -> /?filter=<key>) ---------
+
+export type QueueFilterKey = "all" | "needs-attention" | "ready" | "submitted";
+
+export const QUEUE_FILTERS: { key: QueueFilterKey; label: string; statuses: CaseStatus[] | null }[] = [
+  { key: "all", label: "All cases", statuses: null },
+  { key: "needs-attention", label: "Needs attention", statuses: ["needs-review", "needs-evidence"] },
+  { key: "ready", label: "Ready for review", statuses: ["ready-for-review", "approved"] },
+  { key: "submitted", label: "Submitted", statuses: ["submitted", "in-review"] },
+];
+
+export function matchesQueueFilter(status: CaseStatus, filter: QueueFilterKey): boolean {
+  const spec = QUEUE_FILTERS.find((f) => f.key === filter);
+  if (!spec || !spec.statuses) return true;
+  return spec.statuses.includes(status);
+}

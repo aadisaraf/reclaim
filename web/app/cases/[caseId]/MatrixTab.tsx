@@ -37,6 +37,7 @@ export default function MatrixTab({
             label: "Policy criteria satisfied",
             value: matrix.summary.satisfied,
             ofValue: matrix.summary.total,
+            iconTone: matrix.summary.satisfied === matrix.summary.total ? "success" : "attention",
           },
         ]}
       />

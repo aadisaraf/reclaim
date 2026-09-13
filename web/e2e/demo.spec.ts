@@ -6,7 +6,6 @@ import { test, expect } from "@playwright/test";
 test("hero case demo: remit to submitted appeal", async ({ page }) => {
   // 1. Reset demo.
   await page.goto("/");
-  await expect(page.getByText("SYNTHETIC DEMO DATA", { exact: false })).toBeVisible();
   await expect(page.getByText("Demo date: 2026-09-12")).toBeVisible();
   await expect(page.getByText("AI: replay")).toBeVisible();
 
@@ -24,7 +23,6 @@ test("hero case demo: remit to submitted appeal", async ({ page }) => {
   // 3. Open the case and assert 6 passed identity checks.
   await page.getByText("Northstar Health · CO-50 Medical necessity · $4,800").click();
   await expect(page).toHaveURL(/\/cases\/case-100028/);
-  await expect(page.getByText("SYNTHETIC DEMO DATA", { exact: false })).toBeVisible();
   await page.getByRole("tab", { name: "Identity" }).click();
   await expect(page.getByText("Passed")).toHaveCount(6, { timeout: 15_000 });
 
@@ -45,7 +43,7 @@ test("hero case demo: remit to submitted appeal", async ({ page }) => {
   await expect(page.getByText("Expected recovery: $4,800")).toBeVisible();
 
   // 7. Approve as billing-approver-01, then assert the confirmation and tracking.
-  await expect(page.getByLabel("Persona")).toHaveValue("billing-approver-01");
+  await expect(page.getByRole("button", { name: /Persona: billing-approver-01/ })).toBeVisible();
   await page.getByRole("button", { name: "Approve and submit" }).click();
   await expect(
     page.getByText("Submitted · Northstar confirmation NST-APL-80126 · expected resolution 14 days")

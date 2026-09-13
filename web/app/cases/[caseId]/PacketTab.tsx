@@ -8,10 +8,11 @@ import {
   Packet,
   Submission,
   approveAndSubmit,
+  currentPersona,
   getPacketPdfUrl,
 } from "@/lib/api";
-import { currentPersona } from "../../components/Header";
-import { AlertCircleIcon, CheckCircleIcon } from "../../components/icons";
+import { AlertCircleIcon, CheckCircleIcon, DocumentStackIcon } from "../../components/icons";
+import StatCards, { StatCardSpec } from "../../components/StatCards";
 
 function citationsFor(matrix: EvidenceMatrix | null, requirementIds: string[], citationIds: string[]): Citation[] {
   if (!matrix) return [];
@@ -51,6 +52,32 @@ export default function PacketTab({
     return <p style={{ color: "var(--color-muted-foreground)" }}>No packet has been drafted yet.</p>;
   }
 
+  const stats: StatCardSpec[] = [];
+  if (packet.letter) {
+    stats.push({
+      key: "statements",
+      icon: <DocumentStackIcon size={16} />,
+      label: "Statements",
+      value: packet.letter.body.length,
+    });
+    stats.push({
+      key: "attachments",
+      icon: <DocumentStackIcon size={16} />,
+      label: "Attachments",
+      value: packet.letter.attachments.length,
+    });
+  }
+  if (matrix) {
+    stats.push({
+      key: "completeness",
+      icon: <CheckCircleIcon size={16} />,
+      label: "Policy criteria satisfied",
+      value: matrix.summary.satisfied,
+      ofValue: matrix.summary.total,
+      iconTone: matrix.summary.satisfied === matrix.summary.total ? "success" : "attention",
+    });
+  }
+
   async function onApprove() {
     if (!packet) return;
     setApproving(true);
@@ -77,6 +104,8 @@ export default function PacketTab({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-lg)" }}>
+      <StatCards stats={stats} />
+
       <div>
         {statusLines.map((line, i) => (
           <p
@@ -188,36 +217,37 @@ export default function PacketTab({
               ))}
             </ul>
           </div>
-
-          <a
-            href={packet.pdfUrl ?? getPacketPdfUrl(caseId, packet.version)}
-            target="_blank"
-            rel="noreferrer"
-            style={{ fontSize: "var(--text-sm)" }}
-          >
-            View packet PDF
-          </a>
         </>
       )}
 
       <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: "var(--space-lg)" }}>
-        {submission?.appealId ? (
-          <p style={{ fontWeight: 600, display: "flex", alignItems: "center", gap: "var(--space-xs)" }}>
-            <CheckCircleIcon size={16} />
-            {submission.display}
-            {submission.payerStatus === "in-review" && " · In review"}
-          </p>
-        ) : (
-          <>
+        <div style={{ display: "flex", gap: "var(--space-sm)", alignItems: "center", flexWrap: "wrap" }}>
+          {packet.letter && (
+            <a
+              href={packet.pdfUrl ?? getPacketPdfUrl(caseId, packet.version)}
+              target="_blank"
+              rel="noreferrer"
+              className="btn-secondary"
+            >
+              View packet PDF
+            </a>
+          )}
+          {submission?.appealId ? (
+            <p style={{ fontWeight: 600, display: "flex", alignItems: "center", gap: "var(--space-xs)", margin: 0 }}>
+              <CheckCircleIcon size={16} />
+              {submission.display}
+              {submission.payerStatus === "in-review" && " · In review"}
+            </p>
+          ) : (
             <button className="btn-primary" onClick={onApprove} disabled={!canApprove || approving}>
               {approving ? "Submitting…" : "Approve and submit"}
             </button>
-            {!canApprove && (
-              <p style={{ fontSize: "var(--text-sm)", color: "var(--color-muted-foreground)", marginTop: "var(--space-sm)" }}>
-                The current persona cannot approve this packet.
-              </p>
-            )}
-          </>
+          )}
+        </div>
+        {!submission?.appealId && !canApprove && (
+          <p style={{ fontSize: "var(--text-sm)", color: "var(--color-muted-foreground)", marginTop: "var(--space-sm)" }}>
+            The current persona cannot approve this packet.
+          </p>
         )}
         {(approveError || submission?.errorMessage) && (
           <p style={{ color: "var(--color-destructive)", marginTop: "var(--space-sm)" }}>

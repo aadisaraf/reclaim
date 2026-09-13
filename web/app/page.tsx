@@ -1,19 +1,33 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   Queue,
+  QUEUE_FILTERS,
+  QueueFilterKey,
+  REFRESH_CONFIG_EVENT,
   getConfig,
   getQueue,
+  matchesQueueFilter,
   resetDemo,
   setMissingEvidence,
   simulateRemit,
 } from "@/lib/api";
 import StatusBadge from "./components/StatusBadge";
-import { REFRESH_CONFIG_EVENT } from "./components/Header";
 
 export default function QueuePage() {
+  return (
+    <Suspense fallback={null}>
+      <QueuePageInner />
+    </Suspense>
+  );
+}
+
+function QueuePageInner() {
+  const searchParams = useSearchParams();
+  const filter = (searchParams.get("filter") as QueueFilterKey | null) ?? "all";
   const [queue, setQueue] = useState<Queue | null>(null);
   const [missingEvidence, setMissingEvidenceState] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -111,14 +125,29 @@ export default function QueuePage() {
       </div>
 
       <div>
-        <h2 style={{ fontSize: "var(--text-md)", marginBottom: "var(--space-md)" }}>Case queue</h2>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "var(--space-md)", marginBottom: "var(--space-md)" }}>
+          <h2 style={{ fontSize: "var(--text-md)", margin: 0 }}>Case queue</h2>
+          <div className="filter-pill-row">
+            {QUEUE_FILTERS.map((f) => (
+              <Link
+                key={f.key}
+                href={f.key === "all" ? "/" : `/?filter=${f.key}`}
+                className={`filter-pill ${filter === f.key ? "active" : ""}`}
+              >
+                {f.label}
+              </Link>
+            ))}
+          </div>
+        </div>
         {!queue || queue.cases.length === 0 ? (
           <p style={{ color: "var(--color-muted-foreground)" }}>
             No worked cases yet. Click &ldquo;Simulate incoming remit&rdquo; to deliver the sample 835.
           </p>
+        ) : queue.cases.filter((c) => matchesQueueFilter(c.status, filter)).length === 0 ? (
+          <p style={{ color: "var(--color-muted-foreground)" }}>No cases match this filter.</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
-            {queue.cases.map((c) => (
+            {queue.cases.filter((c) => matchesQueueFilter(c.status, filter)).map((c) => (
               <Link
                 key={c.caseId}
                 href={`/cases/${encodeURIComponent(c.caseId)}`}
