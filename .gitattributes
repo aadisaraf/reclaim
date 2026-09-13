@@ -1,0 +1,3 @@
+fixtures/x12/*.835 text eol=lf
+fixtures/x12/*.837 text eol=lf
+fixtures/payer/*.pdf binary

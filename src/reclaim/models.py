@@ -156,7 +156,7 @@ def _fmt_date(iso_date: str) -> str:
     import datetime
 
     d = datetime.date.fromisoformat(iso_date)
-    return d.strftime("%B %-d, %Y") if hasattr(d, "strftime") else iso_date
+    return f"{d:%B} {d.day}, {d:%Y}" if hasattr(d, "strftime") else iso_date
 
 
 class Citation(BaseModel):
