@@ -851,7 +851,7 @@ resolution 14 days", then "In review".
 **Independent Test**: every needs-review path names its field, and zero clinical requests are
 proven from the audit events.
 
-- [ ] T105 [P] [US2] Write `tests/integration/test_needs_review_paths.py`, each case end to end
+- [X] T105 [P] [US2] Write `tests/integration/test_needs_review_paths.py`, each case end to end
   with fakes.
   - A remit copy without `NM1*QC` gives `memberId` with no EHR requests.
   - A missing 837 gives `originalClaim` with no EHR requests.
@@ -860,7 +860,7 @@ proven from the audit events.
   - A payer 404 gives `payerClaimId`.
   - `GET /api/cases/{id}` returns `statusLine` "Needs review" and
     `case.needsReviewField` for each.
-- [ ] T106 [US2] Update three files:
+- [X] T106 [US2] Update three files:
   - `src/reclaim/api.py`: `statusLine` "Needs review" plus `needsReviewLine`
     "Needs review: <field>".
   - `web/app/cases/[caseId]/IdentityTab.tsx`: highlight the failing check and show "No clinical
@@ -881,7 +881,7 @@ and creates one clinician request. Re-run and task closure work too.
 **Independent Test**: A9 step 7: "Needs 1 item", R2 red, no letter, Approve disabled, one
 clinician request. Toggle off and re-run returns 3/3.
 
-- [ ] T107 [P] [US7] Write `tests/integration/test_missing_evidence.py`, end to end with the mock
+- [X] T107 [P] [US7] Write `tests/integration/test_missing_evidence.py`, end to end with the mock
   hospital toggle on and `FakeLlmClient` (hand-written proposal with R2 missing and the A8 reason).
   - Status `needs-evidence`, summary 2/3.
   - R2 reason exactly "No DocumentReference or MedicationRequest in the lookback window documents
@@ -893,17 +893,17 @@ clinician request. Toggle off and re-run returns 3/3.
   - Toggle off and re-run: `ready-for-review` 3/3, and the task is `closed` with `close_note`
     "Requirement R2 is now satisfied by a verified citation."
   - Re-run on a `submitted` case returns 409 `rerun_unavailable` and the submission is unchanged.
-- [ ] T108 [P] [US7] Write `tests/contract/test_app_api_demo_controls.py`.
+- [X] T108 [P] [US7] Write `tests/contract/test_app_api_demo_controls.py`.
   - `PUT /api/demo/missing-evidence {"enabled": true}` returns `{"enabled": true}` and the hospital
     mock state is on.
   - `GET /api/config` shows `missingEvidence` true.
   - `POST /api/cases/case-100028/rerun` returns 202 for `needs-evidence` and 409
     `rerun_unavailable` with "A submitted appeal cannot be re-run. Reset the demo first." for
     `submitted`.
-- [ ] T109 [US7] Add task create, keep, and close to `src/reclaim/steps/build_matrix.py`, using the
+- [X] T109 [US7] Add task create, keep, and close to `src/reclaim/steps/build_matrix.py`, using the
   R2 question map and template from data-model.md §6. Add `upsert_task`, `close_task`, and
   `list_tasks` to `src/reclaim/repo.py`.
-- [ ] T110 [US7] Update three files:
+- [X] T110 [US7] Update three files:
   - `src/reclaim/demo.py`: `set_missing_evidence(ctx, enabled)`, which calls the hospital
     `/_control`.
   - `src/reclaim/api.py`: `PUT /api/demo/missing-evidence`, `POST /api/cases/{caseId}/rerun`, and
@@ -930,13 +930,13 @@ one clinician request.
 **Independent Test**: after a full demo, reset clears everything and the payer accepts a fresh
 submission (201).
 
-- [ ] T112 [P] [US8] Write `tests/integration/test_reset.py`, starting from a submitted hero case
+- [X] T112 [P] [US8] Write `tests/integration/test_reset.py`, starting from a submitted hero case
   with the toggle on and tasks present.
   - `POST /api/demo/reset` returns 204.
   - Every repo table is empty, the inbox is empty, and the hospital toggle is off.
   - The payer mock has no appeals: a fresh submission returns 201, not a 200 replay.
   - `GET /api/config` still has `aiMode` replay.
-- [ ] T113 [US8] Update three files:
+- [X] T113 [US8] Update three files:
   - `src/reclaim/demo.py`: `reset_demo(ctx)`, which calls `repo.reset_all`, `RemitInbox.clear`,
     hospital `/_control/reset`, and payer `/_control/reset`, and clears the poller's seen-file set.
   - `src/reclaim/api.py`: `POST /api/demo/reset`.
@@ -996,7 +996,7 @@ run again with a fresh confirmation.
      "In review" within 45 s.
 
   Every page asserts "SYNTHETIC DEMO DATA", "Demo date: 2026-09-12", and "AI: replay".
-- [ ] T124 Update the `Makefile` `test` target to run:
+- [X] T124 Update the `Makefile` `test` target to run:
   1. `uv run pytest`
   2. `LLM_MODE=replay docker compose up -d --build --wait`
   3. `RECLAIM_DOCKER_TESTS=1 uv run pytest -m docker`

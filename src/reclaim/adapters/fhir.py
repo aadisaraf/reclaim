@@ -18,8 +18,8 @@ class HttpEhrClient:
         self._token: str | None = None
         self.requests_made: list[str] = []
 
-    async def _get_token(self) -> str:
-        if self._token is not None:
+    async def _get_token(self, force_refresh: bool = False) -> str:
+        if self._token is not None and not force_refresh:
             return self._token
         resp = await self._client.post(
             self.token_url,
@@ -36,10 +36,17 @@ class HttpEhrClient:
     async def _get(self, path: str) -> httpx.Response:
         token = await self._get_token()
         self.requests_made.append(f"GET /fhir/R4/{path}")
-        return await self._client.get(
+        resp = await self._client.get(
             f"{self.base_url}/{path}",
             headers={"Authorization": f"Bearer {token}", "Accept": FHIR_ACCEPT},
         )
+        if resp.status_code == 401:
+            token = await self._get_token(force_refresh=True)
+            resp = await self._client.get(
+                f"{self.base_url}/{path}",
+                headers={"Authorization": f"Bearer {token}", "Accept": FHIR_ACCEPT},
+            )
+        return resp
 
     async def read(self, resource_type: str, resource_id: str) -> dict:
         resp = await self._get(f"{resource_type}/{resource_id}")
@@ -61,7 +68,15 @@ class HttpEhrClient:
             method, f"{root}/_control/{path}", json=json,
             headers={"Authorization": f"Bearer {token}"},
         )
+        if resp.status_code == 401:
+            token = await self._get_token(force_refresh=True)
+            resp = await self._client.request(
+                method, f"{root}/_control/{path}", json=json,
+                headers={"Authorization": f"Bearer {token}"},
+            )
         resp.raise_for_status()
+        if method == "POST" and path == "reset":
+            self._token = None
         return resp.json()
 
     async def read_binary(self, binary_id: str) -> BinaryContent:
