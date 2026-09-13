@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from reclaim.adapters.protocols import ClaimArchive, EhrClient, LlmClient, PayerAdapter, PolicyStore, RemitInbox
 from reclaim.config import Settings
@@ -16,3 +16,4 @@ class AppContext:
     payer_adapter: PayerAdapter
     llm_client: LlmClient
     claim_map_path: str = "fixtures/claim-map.json"
+    poller_seen: set = field(default_factory=set)

@@ -15,13 +15,18 @@ def get_missing_evidence() -> bool:
     return _missing_evidence_enabled
 
 
-def set_missing_evidence(enabled: bool) -> bool:
+async def set_missing_evidence(ctx, enabled: bool) -> bool:
     global _missing_evidence_enabled
-    _missing_evidence_enabled = enabled
+    result = await ctx.ehr_client.control("PUT", "missing-evidence", json={"enabled": enabled})
+    _missing_evidence_enabled = result["enabled"]
     return _missing_evidence_enabled
 
 
 async def reset_demo(ctx) -> None:
+    global _missing_evidence_enabled
     ctx.repo.reset_all()
     await ctx.remit_inbox.clear()
-    set_missing_evidence(False)
+    ctx.poller_seen.clear()
+    await ctx.ehr_client.control("POST", "reset")
+    await ctx.payer_adapter.control_reset()
+    _missing_evidence_enabled = False

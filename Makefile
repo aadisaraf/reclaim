@@ -34,6 +34,7 @@ demo:
 
 reset:
 	curl -fsS -X POST localhost:8000/api/demo/reset
+	rm -f .local/sftp/outbound-835/*
 
 record:
 	LLM_MODE=live uv run python scripts/record_replay.py

@@ -54,6 +54,16 @@ class HttpEhrClient:
         bundle = resp.json()
         return [entry["resource"] for entry in bundle.get("entry", [])]
 
+    async def control(self, method: str, path: str, json: dict | None = None) -> dict:
+        token = await self._get_token()
+        root = self.base_url.removesuffix("/fhir/R4")
+        resp = await self._client.request(
+            method, f"{root}/_control/{path}", json=json,
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        resp.raise_for_status()
+        return resp.json()
+
     async def read_binary(self, binary_id: str) -> BinaryContent:
         import base64
 

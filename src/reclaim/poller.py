@@ -19,9 +19,8 @@ async def _poll_once(ctx, seen: set[tuple[str, int, int]]) -> None:
 
 
 async def run_inbox_poller(ctx, interval: float = 1.0) -> None:
-    seen: set[tuple[str, int, int]] = set()
     while True:
-        await _poll_once(ctx, seen)
+        await _poll_once(ctx, ctx.poller_seen)
         await asyncio.sleep(interval)
 
 

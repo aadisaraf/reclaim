@@ -1,12 +1,15 @@
+import asyncio
 import json
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
+from pydantic import BaseModel
 
 from reclaim import demo
 from reclaim.adapters.llm import cost_usd
 from reclaim.adapters.protocols import LlmUsage
 from reclaim.context import AppContext
 from reclaim.models import Deadline, Policy
+from reclaim.pipeline import rerun_case
 from reclaim.steps.approve_and_submit import (
     CaseNotFoundError,
     NotReadyError,
@@ -144,6 +147,31 @@ def _sum_llm_usage(events: list[dict]) -> LlmUsage:
     )
 
 
+def _case_json(case: dict) -> dict:
+    return {
+        "caseId": case["case_id"], "hospitalClaimId": case["hospital_claim_id"], "lane": case["lane"],
+        "status": case["status"], "payerClaimId": case["payer_claim_id"], "payer": case["payer"],
+        "payerId": case["payer_id"], "memberId": case["member_id"], "renderingNpi": case["rendering_npi"],
+        "procedureQualifier": case["procedure_qualifier"], "procedureCode": case["procedure_code"],
+        "dateOfService": case["date_of_service"], "denialCode": case["denial_code"],
+        "denialReason": case["denial_reason"], "billedAmount": case["billed_amount"],
+        "paidAmount": case["paid_amount"], "deniedAmount": case["denied_amount"],
+        "remitFile": case["remit_file"], "remitSha256": case["remit_sha256"],
+        "needsReviewField": case["needs_review_field"], "lastError": case["last_error"],
+        "createdAt": case["created_at"], "updatedAt": case["updated_at"],
+    }
+
+
+def _rerun_unavailable_reason(case: dict) -> str | None:
+    if case["running"]:
+        return "Case is currently running"
+    if case["status"] == "submitted":
+        return "A submitted appeal cannot be re-run. Reset the demo first."
+    if case["status"] in RERUN_BLOCKED_STATUSES:
+        return f"A case in status {case['status']} cannot be re-run. Reset the demo first."
+    return None
+
+
 def _submission_display(submission: dict) -> str | None:
     if submission["status"] != "confirmed" or not submission["appeal_id"]:
         return None
@@ -274,18 +302,26 @@ def get_case_detail(case_id: str, ctx: AppContext = Depends(get_ctx)) -> dict:
         "line": f"AI cost for this case (estimate): ${usd:.4f}",
     }
 
-    if running:
-        rerun_unavailable_reason = "Case is currently running"
-    elif case["status"] in RERUN_BLOCKED_STATUSES:
-        rerun_unavailable_reason = f"A case in status {case['status']} cannot be re-run. Reset the demo first."
-    else:
-        rerun_unavailable_reason = None
     actions = {
         "canRerun": case["status"] not in RERUN_BLOCKED_STATUSES and not running,
-        "rerunUnavailableReason": rerun_unavailable_reason,
+        "rerunUnavailableReason": _rerun_unavailable_reason(case),
         "canApprove": bool(latest_packet) and latest_packet["status"] == "ready-for-review"
         and case["status"] == "ready-for-review",
     }
+
+    task_rows = repo.list_tasks(case_id)
+    tasks = [
+        {
+            "taskId": t["task_id"], "taskType": t["task_type"], "requirementId": t["requirement_id"],
+            "assigneeRole": t["assignee_role"], "question": t["question"], "status": t["status"],
+            "closeNote": t["close_note"],
+        }
+        for t in task_rows
+    ]
+    open_task_count = sum(1 for t in task_rows if t["status"] == "open")
+    needs_line = None
+    if case["status"] == "needs-evidence" and open_task_count:
+        needs_line = f"Needs {open_task_count} item{'s' if open_task_count != 1 else ''}"
 
     timeline = [
         {
@@ -299,7 +335,7 @@ def get_case_detail(case_id: str, ctx: AppContext = Depends(get_ctx)) -> dict:
     ]
 
     return {
-        "case": case,
+        "case": _case_json(case),
         "running": running,
         "statusLine": status_line,
         "identity": identity,
@@ -309,9 +345,9 @@ def get_case_detail(case_id: str, ctx: AppContext = Depends(get_ctx)) -> dict:
         "deadline": deadline,
         "matrix": matrix,
         "completenessLine": completeness_line,
-        "needsLine": None,
+        "needsLine": needs_line,
         "recoveryLine": recovery_line,
-        "tasks": [],
+        "tasks": tasks,
         "packet": packet,
         "submission": submission,
         "aiCost": ai_cost,
@@ -378,3 +414,33 @@ async def approve_and_submit_endpoint(
         "errorMessage": None,
         "display": result.display,
     }
+
+
+class MissingEvidenceToggle(BaseModel):
+    enabled: bool
+
+
+@router.put("/api/demo/missing-evidence")
+async def set_missing_evidence_endpoint(
+    toggle: MissingEvidenceToggle, ctx: AppContext = Depends(get_ctx)
+) -> dict:
+    enabled = await demo.set_missing_evidence(ctx, toggle.enabled)
+    return {"enabled": enabled}
+
+
+@router.post("/api/cases/{case_id}/rerun", status_code=202)
+async def rerun_case_endpoint(case_id: str, ctx: AppContext = Depends(get_ctx)) -> dict:
+    case = ctx.repo.get_case(case_id)
+    if case is None:
+        raise _not_found(case_id)
+    reason = _rerun_unavailable_reason(case)
+    if reason is not None:
+        raise HTTPException(409, detail={"error": {"code": "rerun_unavailable", "message": reason}})
+    asyncio.create_task(rerun_case(ctx, case_id))
+    return {"caseId": case_id, "running": True}
+
+
+@router.post("/api/demo/reset", status_code=204)
+async def reset_demo_endpoint(ctx: AppContext = Depends(get_ctx)) -> Response:
+    await demo.reset_demo(ctx)
+    return Response(status_code=204)

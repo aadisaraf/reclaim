@@ -62,6 +62,10 @@ class NorthstarPayerAdapter:
             replayed=resp.headers.get("Idempotent-Replayed") == "true",
         )
 
+    async def control_reset(self) -> None:
+        resp = await self._client.post(f"{self.base_url}/_control/reset")
+        resp.raise_for_status()
+
     async def get_appeal(self, appeal_id: str) -> AppealStatus:
         resp = await self._client.get(f"{self.base_url}/appeals/{appeal_id}")
         if resp.status_code != 200:
