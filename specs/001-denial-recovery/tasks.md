@@ -1024,7 +1024,7 @@ run again with a fresh confirmation.
   - Record the findings in `specs/001-denial-recovery/dead-code-sweep.md`, listing each unused
     symbol with its file.
   - Delete unused code in follow-up tasks of at most 3 files each, added via `/speckit-converge`.
-- [ ] T130 Verify a clean clone passes.
+- [X] T130 Verify a clean clone passes.
   - `git clone` the repo into a fresh temp directory, `cd` into it, and run `make setup` then
     `make test` with no pre-existing `.env` or `.local/`.
   - Record the pass/fail output summary in `specs/001-denial-recovery/quickstart.md` under a

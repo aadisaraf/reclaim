@@ -118,3 +118,26 @@ make record
 This makes one live run of the happy case and the missing-evidence case. It writes
 `fixtures/llm-replay/*.json` only if the outcomes match Appendix A8. Commit the new files after
 `make test` passes. The secrets guard scans them.
+
+## 6. Clean clone verified
+
+**2026-09-12** (T130, `001-denial-recovery` @ `f52679b`): cloned the repo fresh into a temp
+directory, checked out `001-denial-recovery`, and confirmed a Python backend clean-clone passes
+with no pre-existing `.env` or `.local/`:
+
+- `uv sync --locked` — clean install, no errors.
+- `.env` built the same way `make setup` builds it (copy `.env.example`, generate
+  `SFTP_PASSWORD`/`HOSPITAL_CLIENT_SECRET`/`PAYER_TOKEN` via `secrets.token_urlsafe(24)`), plus
+  `mkdir -p .local/sftp/outbound-835 .local/data`.
+- `uv run pytest -q` → **281 passed, 3 skipped** (identical to the working tree; the 3 skips are
+  the `docker`-marked SFTP contract tests, which need `RECLAIM_DOCKER_TESTS=1` and a running
+  compose stack by design).
+
+**Not run**: the full `make setup`/`make test` pipeline (npm install, Playwright, docker compose)
+was not executed end-to-end, because `web/` is **not tracked in git on this branch at all**
+(`git ls-files web/` returns zero files — the Next.js frontend lives only on the separate
+`Pranav` branch). A fresh clone of `001-denial-recovery` alone has no `web/` directory, so
+`make setup`'s `cd web && npm install` step cannot succeed here regardless of backend state.
+This is the expected branch-split (see `docs/reclaim-speckit-prompts.md` Appendix B and the
+backend/frontend ownership split), not a new bug — full clean-clone verification of `make test`
+should happen once this branch and `Pranav` are merged.
