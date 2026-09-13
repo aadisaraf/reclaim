@@ -953,28 +953,28 @@ run again with a fresh confirmation.
 
 ## Phase 12: Hardening (after MVP)
 
-- [ ] T115 [P] [US4] Write `tests/integration/test_deadline_warning.py`. With the payer mock
+- [X] T115 [P] [US4] Write `tests/integration/test_deadline_warning.py`. With the payer mock
   decision `appealDeadline` overridden to 2026-10-15, the case `deadline.warning` names both
   October 15, 2026 and October 19, 2026, and `deadline.line` uses October 15.
 - [ ] T116 [US4] Render `deadline.warning` as a visible warning in
   `web/app/cases/[caseId]/PacketTab.tsx` and `web/app/cases/[caseId]/MatrixTab.tsx`.
-- [ ] T117 [P] [US1] Write `tests/integration/test_repeat_claim.py`. A second, different 835
+- [X] T117 [P] [US1] Write `tests/integration/test_repeat_claim.py`. A second, different 835
   (fixture text with a new ISA13, GS06, and TRN02, built in-test) that repeats `HSP-CLM-100028`
   creates no second case and adds a "later remittance" audit event to `case-100028`.
-- [ ] T118 [US1] Make T117 pass in `src/reclaim/steps/ingest.py`: an existing `hospital_claim_id`
+- [X] T118 [US1] Make T117 pass in `src/reclaim/steps/ingest.py`: an existing `hospital_claim_id`
   writes a case audit event instead of an upsert.
-- [ ] T119 [P] [US4] Write `tests/integration/test_llm_failures.py`.
+- [X] T119 [P] [US4] Write `tests/integration/test_llm_failures.py`.
   - A live client raising a 500 twice fails `build_matrix` visibly: status stays
     `evidence-gathered`, `last_error` is set, the audit event shows the error, and no replay is
     used.
   - `ReplayMissError` behaves the same.
   - `GET /api/config` still reports the original mode.
-- [ ] T120 [US4] Make T119 pass in `src/reclaim/pipeline.py`, including the `last_error` text shown
+- [X] T120 [US4] Make T119 pass in `src/reclaim/pipeline.py`, including the `last_error` text shown
   on the timeline.
-- [ ] T121 [P] [US6] Write `tests/unit/test_status_wording.py`. For each status from `new` to
+- [X] T121 [P] [US6] Write `tests/unit/test_status_wording.py`. For each status from `new` to
   `approved` and for a `refused` submission, the case detail JSON built by `src/reclaim/api.py`
   contains none of "filed", "Submitted", "submitted" (outside the `status` enum field), or "won".
-- [ ] T122 [P] Write `tests/unit/test_pipeline_concurrency.py`.
+- [X] T122 [P] Write `tests/unit/test_pipeline_concurrency.py`.
   - With `LLM_CONCURRENCY=4` and 6 cases whose fake step sleeps, at most 4 run at once.
   - Steps inside one case run in order.
 
