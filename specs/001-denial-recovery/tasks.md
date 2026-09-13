@@ -75,12 +75,12 @@ The MVP is Phases 1–8, which covers demo steps 1–6 in replay mode.
     `CMD ["uv","run","uvicorn","reclaim.main:app","--host","0.0.0.0","--port","8000"]` is
     overridden per service.
   - `.dockerignore` excludes `.env`, `.local`, `.venv`, `web/node_modules`, and `.git`.
-- [ ] T004 [P] Scaffold the Next.js app by hand in `web/package.json`, `web/next.config.ts`, and
+- [X] T004 [P] Scaffold the Next.js app by hand in `web/package.json`, `web/next.config.ts`, and
   `web/tsconfig.json`.
   - `web/package.json`: next 16.3.5, react, react-dom, typescript, @types/react,
     @playwright/test 1.63.0, with scripts `dev`, `build`, `start`, and `e2e`.
   - `web/next.config.ts` sets `output: 'standalone'`.
-- [ ] T005 Run `npm install` in `web/` to produce `web/package-lock.json`, and create
+- [X] T005 Run `npm install` in `web/` to produce `web/package-lock.json`, and create
   `web/Dockerfile`: a node:20 multi-stage build of the standalone output on port 3000, with the
   `NEXT_PUBLIC_API_BASE` build arg.
 - [X] T006 Create `docker-compose.yml` with five services. All use `env_file: [{path: .env, required: false}]`.
@@ -317,13 +317,13 @@ store, both mocks, SFTP, and the app/web shell. No user story work starts until 
     adapters, a lifespan that inits the repo, and CORS.
   - `api.py`: an APIRouter with `/api/health`, `/api/config`, and `/api/personas`; the persona
     table is a constant in `api.py`; errors use the `{"error":{code,message}}` envelope.
-- [ ] T044 Create `web/lib/api.ts` and `web/app/components/Header.tsx`.
+- [X] T044 Create `web/lib/api.ts` and `web/app/components/Header.tsx`.
   - `api.ts`: typed fetch helpers for the app API. The base is `NEXT_PUBLIC_API_BASE`. Human
     actions send `X-Persona`.
   - `Header.tsx`: a client component showing "SYNTHETIC DEMO DATA",
     "Demo date: 2026-09-12" (from `/api/config`), "AI: live" or "AI: replay", the configured base
     URLs, and a persona picker saved to localStorage inside try/catch.
-- [ ] T045 Create `web/app/layout.tsx` (renders `Header` on every page) and `web/app/globals.css`.
+- [X] T045 Create `web/app/layout.tsx` (renders `Header` on every page) and `web/app/globals.css`.
 
 **Checkpoint**: `uv run pytest` is green. `make demo` serves http://localhost:3000 with the
 header, persona picker, and base URLs. Fixtures are validated.
@@ -402,7 +402,7 @@ text; a repeat delivery creates no cases; zero EHR requests are recorded.
     `RemitInbox.deliver`.
   - `api.py`: add `GET /api/queue` and `POST /api/demo/simulate-remit`.
   - `main.py`: wire `SftpRemitInbox` and `SftpClaimArchive`, and start the poller task in the lifespan.
-- [ ] T055 [US1] Create `web/app/page.tsx` (client component).
+- [X] T055 [US1] Create `web/app/page.tsx` (client component).
   - Presenter bar with a "Simulate incoming remit" button.
   - Polls `/api/queue` every 1 s.
   - Lists case headlines linking to `/cases/[caseId]`, with status badges.
@@ -474,7 +474,7 @@ for that comes in Phase 9).
 - [X] T064 [US2] Register `fetch_claim` and `resolve_identity` in `STEPS` in
   `src/reclaim/pipeline.py`. Add `GET /api/cases/{caseId}` (case, running, statusLine, identity,
   timeline, actions) to `src/reclaim/api.py`.
-- [ ] T065 [US2] Create `web/app/cases/[caseId]/page.tsx`,
+- [X] T065 [US2] Create `web/app/cases/[caseId]/page.tsx`,
   `web/app/cases/[caseId]/IdentityTab.tsx`, and `web/app/cases/[caseId]/TimelineTab.tsx`.
   - `page.tsx`: tabs for Identity, Evidence, Matrix, Packet, and Timeline; polls every 1 s while
     `running` is set.
@@ -550,7 +550,7 @@ and fetch Binaries for in-window notes only.
   - `src/reclaim/api.py`: add the `evidence` section (items, `excludedLine`, `searchCounts`) and
     `policy.label` to the case detail.
   - `src/reclaim/main.py`: wire `HttpEhrClient` and `FilePolicyStore`.
-- [ ] T072 [US3] Create `web/app/cases/[caseId]/EvidenceTab.tsx`. Each row shows a type label
+- [X] T072 [US3] Create `web/app/cases/[caseId]/EvidenceTab.tsx`. Each row shows a type label
   (Coverage, Condition, Order, Procedure, X-ray report, Pain score, Note), record id, source, and
   date. Below the rows: the excluded line and "MedicationRequest: 0 found". Mount it in
   `web/app/cases/[caseId]/page.tsx`.
@@ -665,7 +665,7 @@ satisfied by verified excerpts. Forged and paraphrased citations are rejected.
   - `src/reclaim/main.py`: wire `NorthstarPayerAdapter` and the LLM client by `LLM_MODE`.
   - `src/reclaim/api.py`: add `payerDecision`, `deadline`, `matrix`, `completenessLine`, and
     `aiCost` (summed from audit usage, line "AI cost for this case (estimate): $…").
-- [ ] T085 [US4] Create `web/app/cases/[caseId]/MatrixTab.tsx`.
+- [X] T085 [US4] Create `web/app/cases/[caseId]/MatrixTab.tsx`.
   - Shows the policy label and title.
   - R1–R3 rows turn green one by one via a 400 ms CSS stagger, each with requirement text,
     citations, and excerpts. Missing rows are red with the reason.
@@ -752,7 +752,7 @@ highlights its requirement and excerpt. An uncited statement blocks the packet.
   - `src/reclaim/api.py`: add the `packet` and `recoveryLine` sections, plus
     `GET /api/cases/{caseId}/packets/{version}/pdf` and
     `GET /api/cases/{caseId}/documents/{documentId}`.
-- [ ] T095 [US5] Create `web/app/cases/[caseId]/PacketTab.tsx`.
+- [X] T095 [US5] Create `web/app/cases/[caseId]/PacketTab.tsx`.
   - Shows the four status lines.
   - Clicking a header field shows its source record.
   - Clicking a body statement highlights its requirement and excerpt.
@@ -809,7 +809,7 @@ A repeat submission gives one appeal. `viewer-01` is refused.
 - [X] T100 [US6] Add `POST /api/cases/{caseId}/packets/{version}/approve-and-submit` (reads
   `X-Persona`) to `src/reclaim/api.py`, plus the `submission` section and `actions.canApprove`
   (false unless the persona role is authorized and the packet is ready).
-- [ ] T101 [US6] Update `web/app/cases/[caseId]/PacketTab.tsx` and
+- [X] T101 [US6] Update `web/app/cases/[caseId]/PacketTab.tsx` and
   `web/app/cases/[caseId]/page.tsx`.
   - "Approve and submit" button, disabled unless `actions.canApprove`.
   - Shows the refusal or payer error message.
@@ -910,7 +910,7 @@ clinician request. Toggle off and re-run returns 3/3.
     the `tasks`, `needsLine`, `actions.canRerun`, and `rerunUnavailableReason` fields.
   - `src/reclaim/pipeline.py`: `rerun_case`, which refuses approved, submitted, in-review, paid,
     and other-denial, resets status to `new`, and schedules `run_case`.
-- [ ] T111 [US7] Update three files:
+- [X] T111 [US7] Update three files:
   - `web/app/page.tsx`: presenter bar "Missing-evidence toggle".
   - `web/app/cases/[caseId]/page.tsx`: the "Needs N item(s)" line, a "Re-run" button (or the
     unavailable explanation), and the clinician request list.
@@ -941,7 +941,7 @@ submission (201).
     hospital `/_control/reset`, and payer `/_control/reset`, and clears the poller's seen-file set.
   - `src/reclaim/api.py`: `POST /api/demo/reset`.
   - `Makefile`: the `reset` target also runs `rm -f .local/sftp/outbound-835/*` when the app is down.
-- [ ] T114 [US8] Update two files:
+- [X] T114 [US8] Update two files:
   - `web/app/page.tsx`: presenter bar "Reset demo" button with a confirm.
   - `web/app/components/Header.tsx`: "AI: live"/"AI: replay" always rendered, and base URLs
     refreshed after reset.
@@ -956,7 +956,7 @@ run again with a fresh confirmation.
 - [X] T115 [P] [US4] Write `tests/integration/test_deadline_warning.py`. With the payer mock
   decision `appealDeadline` overridden to 2026-10-15, the case `deadline.warning` names both
   October 15, 2026 and October 19, 2026, and `deadline.line` uses October 15.
-- [ ] T116 [US4] Render `deadline.warning` as a visible warning in
+- [X] T116 [US4] Render `deadline.warning` as a visible warning in
   `web/app/cases/[caseId]/PacketTab.tsx` and `web/app/cases/[caseId]/MatrixTab.tsx`.
 - [X] T117 [P] [US1] Write `tests/integration/test_repeat_claim.py`. A second, different 835
   (fixture text with a new ISA13, GS06, and TRN02, built in-test) that repeats `HSP-CLM-100028`
@@ -982,7 +982,7 @@ run again with a fresh confirmation.
 
 ## Phase 13: Polish & Cross-Cutting Concerns
 
-- [ ] T123 Create `web/playwright.config.ts` (baseURL http://localhost:3000, chromium) and
+- [X] T123 Create `web/playwright.config.ts` (baseURL http://localhost:3000, chromium) and
   `web/e2e/demo.spec.ts`. The spec runs in replay mode:
   1. Reset demo.
   2. Simulate incoming remit and assert the A9 step 1 texts.
